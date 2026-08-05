@@ -1,7 +1,7 @@
 const input = document.getElementById("userInput");
 const sendBtn = document.getElementById("sendBtn");
 const messages = document.getElementById("messages");
-
+const newChatBtn = document.getElementById("newChatBtn");
 
 sendBtn.addEventListener("click", sendMessage);
 
@@ -114,3 +114,17 @@ function addMessage(text,type){
     return div;
 
 }
+
+newChatBtn.addEventListener("click", () => {
+
+    messages.innerHTML = `
+        <div class="message ai-message">
+            <h2>👋 Welcome to SmartChat AI</h2>
+            <p>Hello! Ask me anything.</p>
+        </div>
+    `;
+
+    input.value = "";
+    input.focus();
+
+});
