@@ -42,7 +42,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (text === "") return;
 
         addMessage(text, "user");
-        saveHistory(text);
 
         input.value = "";
 
@@ -69,6 +68,9 @@ document.addEventListener("DOMContentLoaded", () => {
             loading.remove();
 
             addMessage(data.answer, "ai");
+
+            // Save Question + Answer
+            saveHistory(text, data.answer);
 
         } catch (error) {
 
@@ -104,11 +106,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-    function saveHistory(message) {
+    // Save Question + Answer
+    function saveHistory(question, answer) {
 
         let chats = JSON.parse(localStorage.getItem("chatHistory")) || [];
 
-        chats.unshift(message);
+        chats.unshift({
+            question: question,
+            answer: answer
+        });
 
         chats = chats.slice(0, 10);
 
@@ -118,6 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
+    // Load Sidebar
     function loadHistory() {
 
         let chats = JSON.parse(localStorage.getItem("chatHistory")) || [];
@@ -128,12 +135,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const li = document.createElement("li");
 
-            li.textContent = chat;
+            li.textContent = chat.question;
 
             li.addEventListener("click", () => {
 
-                input.value = chat;
-                input.focus();
+                messages.innerHTML = "";
+
+                addMessage(chat.question, "user");
+                addMessage(chat.answer, "ai");
 
             });
 
