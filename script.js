@@ -13,10 +13,17 @@ document.addEventListener("DOMContentLoaded", () => {
     // Load Previous History
     loadHistory();
 
-    // Events
-    if(sendBtn) sendBtn.addEventListener("click", sendMessage);
+    // Send Button Event (Click & Touch for Mobile)
+    if (sendBtn) {
+        sendBtn.addEventListener("click", sendMessage);
+        sendBtn.addEventListener("touchend", (e) => {
+            e.preventDefault(); // Mobile double tap issue fix
+            sendMessage();
+        });
+    }
 
-    if(input){
+    // Mobile Keyboard Fix (Enter key press)
+    if (input) {
         input.addEventListener("keydown", (e) => {
             if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -25,8 +32,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    if(newChatBtn){
-        newChatBtn.addEventListener("click", () => {
+    // New Chat Button (Desktop + Mobile Touch)
+    if (newChatBtn) {
+        const handleNewChat = () => {
             currentChat = [];
             messages.innerHTML = `
                 <div class="message ai-message">
@@ -36,16 +44,27 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
             input.value = "";
             input.focus();
+        };
+
+        newChatBtn.addEventListener("click", handleNewChat);
+        newChatBtn.addEventListener("touchend", (e) => {
+            e.preventDefault();
+            handleNewChat();
         });
     }
 
-    // Send Message
+    // Send Message Logic
     async function sendMessage() {
         const text = input.value.trim();
         if (!text) return;
 
         addMessage(text, "user");
         input.value = "";
+        
+        // Mobile keyboard blur (optional: keeps input smooth)
+        if(window.innerWidth < 768){
+            input.blur(); 
+        }
 
         const loading = addMessage("🤖 Thinking...", "ai");
 
@@ -80,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Add Message
+    // Add Message Logic
     function addMessage(text, type) {
         const div = document.createElement("div");
         div.className = "message " + (type === "user" ? "user-message" : "ai-message");
@@ -88,9 +107,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         messages.appendChild(div);
 
-        // Auto Scroll Chat Area to Bottom
-        const chatArea = document.querySelector(".chat-area");
-        if(chatArea) chatArea.scrollTop = chatArea.scrollHeight;
+        // Mobile Safe Auto Scroll
+        setTimeout(() => {
+            const chatArea = document.querySelector(".chat-area");
+            if (chatArea) {
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }
+        }, 50);
 
         return div;
     }
@@ -101,15 +124,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let chats = JSON.parse(localStorage.getItem("chatHistory")) || [];
 
-        // Remove duplicate conversation
         chats = chats.filter(chat =>
             JSON.stringify(chat) !== JSON.stringify(currentChat)
         );
 
-        // Add latest chat on top
         chats.unshift([...currentChat]);
-
-        // Keep only last 10 chats
         chats = chats.slice(0, 10);
 
         localStorage.setItem("chatHistory", JSON.stringify(chats));
@@ -136,7 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const li = document.createElement("li");
             li.textContent = chat[0]?.question || `Chat ${index + 1}`;
 
-            li.addEventListener("click", () => {
+            const loadSelectedChat = () => {
                 messages.innerHTML = "";
                 currentChat = [...chat];
 
@@ -144,6 +163,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     addMessage(item.question, "user");
                     addMessage(item.answer, "ai");
                 });
+            };
+
+            li.addEventListener("click", loadSelectedChat);
+            li.addEventListener("touchend", (e) => {
+                e.preventDefault();
+                loadSelectedChat();
             });
 
             historyList.appendChild(li);
