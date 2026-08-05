@@ -1,105 +1,84 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+document.addEventListener("DOMContentLoaded", () => {
 
-    <title>SmartChat AI - AI Assistant</title>
+    const input = document.getElementById("userInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const messages = document.getElementById("messages");
+    const newChatBtn = document.getElementById("newChatBtn");
 
-    <meta name="description" content="Ask anything with SmartChat AI. Fast, smart and free AI assistant.">
+    // Send Button Click
+    sendBtn.addEventListener("click", sendMessage);
 
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+    // Enter Key Press
+    input.addEventListener("keydown", function(e){
+        if(e.key === "Enter" && !e.shiftKey){
+            e.preventDefault();
+            sendMessage();
+        }
+    });
 
-    <!-- Header -->
-    <header class="header">
+    async function sendMessage(){
+        const text = input.value.trim();
 
-        <div class="logo">
-            🤖 SmartChat AI
-        </div>
+        if(text === "") return;
 
-        <button class="theme-btn">
-            🌙
-        </button>
+        addMessage(text, "user");
+        input.value = "";
 
-    </header>
+        const loading = addMessage("🤖 Thinking...", "ai");
 
-    <!-- Main Container -->
-    <div class="container">
+        try {
+            const response = await fetch("/api/chat", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    message: text
+                })
+            });
 
-        <!-- Sidebar -->
-        <aside class="sidebar">
+            const data = await response.json();
 
-            <button class="new-chat-btn" id="newChatBtn">
-    ➕ New Chat
-</button>
+            loading.remove();
+            addMessage(data.answer, "ai");
 
-            <div class="chat-history">
+        } catch(error) {
+            loading.remove();
+            addMessage(
+                "❌ Something went wrong. Please try again.",
+                "ai"
+            );
+            console.log(error);
+        }
+    }
 
-                <h3>Recent Chats</h3>
+    function addMessage(text, type){
+        const div = document.createElement("div");
 
-                <ul>
+        div.classList.add("message");
 
-                    <li>SEO Tips</li>
+        if(type === "user"){
+            div.classList.add("user-message");
+        } else {
+            div.classList.add("ai-message");
+        }
 
-                    <li>Homework</li>
+        div.innerHTML = `<p>${text}</p>`;
 
-                    <li>Coding Help</li>
+        messages.appendChild(div);
+        messages.scrollTop = messages.scrollHeight;
 
-                    <li>Travel Guide</li>
+        return div;
+    }
 
-                </ul>
+    // ➕ NEW CHAT / CLEAR CHAT LOGIC
+    if(newChatBtn) {
+        newChatBtn.addEventListener("click", () => {
+            // Screen se sare messages clear kar do
+            messages.innerHTML = "";
+            input.value = "";
+            input.focus();
+        });
+    }
 
-            </div>
-
-        </aside>
-
-        <!-- Chat Area -->
-        <main class="chat-area">
-
-            <div class="messages" id="messages">
-
-                <div class="message ai-message">
-
-                    <h2>👋 Welcome to SmartChat AI</h2>
-
-                    <p>
-                        Hello! Ask me anything.
-                    </p>
-
-                </div>
-
-            </div>
-
-        </main>
-
-    </div>
-
-    <!-- Input Area -->
-    <div class="input-area">
-
-        <textarea
-            id="userInput"
-            placeholder="Type your message..."
-        ></textarea>
-
-        <button id="sendBtn">
-            Send ➜
-        </button>
-
-    </div>
-
-    <!-- Footer -->
-    <footer>
-
-        <p>
-            © 2026 SmartChat AI. All Rights Reserved.
-        </p>
-
-    </footer>
-
-    <script src="script.js"></script>
-
-</body>
-</html>
+});
