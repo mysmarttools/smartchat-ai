@@ -1,75 +1,84 @@
-const input = document.getElementById("userInput");
-const sendBtn = document.getElementById("sendBtn");
-const messages = document.getElementById("messages");
-const newChatBtn = document.getElementById("newChatBtn");
+document.addEventListener("DOMContentLoaded", () => {
 
-sendBtn.addEventListener("click", sendMessage);
+    const input = document.getElementById("userInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const messages = document.getElementById("messages");
+    const newChatBtn = document.getElementById("newChatBtn");
 
-input.addEventListener("keydown", function(e){
-    if(e.key === "Enter" && !e.shiftKey){
-        e.preventDefault();
-        sendMessage();
+    // Send Button Click
+    sendBtn.addEventListener("click", sendMessage);
+
+    // Enter Key Press
+    input.addEventListener("keydown", function(e){
+        if(e.key === "Enter" && !e.shiftKey){
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    async function sendMessage(){
+        const text = input.value.trim();
+
+        if(text === "") return;
+
+        addMessage(text, "user");
+        input.value = "";
+
+        const loading = addMessage("🤖 Thinking...", "ai");
+
+        try {
+            const response = await fetch("/api/chat", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    message: text
+                })
+            });
+
+            const data = await response.json();
+
+            loading.remove();
+            addMessage(data.answer, "ai");
+
+        } catch(error) {
+            loading.remove();
+            addMessage(
+                "❌ Something went wrong. Please try again.",
+                "ai"
+            );
+            console.log(error);
+        }
     }
-});
 
-async function sendMessage(){
-    const text = input.value.trim();
+    function addMessage(text, type){
+        const div = document.createElement("div");
 
-    if(text === "") return;
+        div.classList.add("message");
 
-    addMessage(text, "user");
-    input.value = "";
+        if(type === "user"){
+            div.classList.add("user-message");
+        } else {
+            div.classList.add("ai-message");
+        }
 
-    const loading = addMessage("🤖 Thinking...", "ai");
+        div.innerHTML = `<p>${text}</p>`;
 
-    try {
-        const response = await fetch("/api/chat", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                message: text
-            })
+        messages.appendChild(div);
+        messages.scrollTop = messages.scrollHeight;
+
+        return div;
+    }
+
+    // ➕ NEW CHAT / CLEAR CHAT LOGIC
+    if(newChatBtn) {
+        newChatBtn.addEventListener("click", () => {
+            // Screen se sare messages clear kar do
+            messages.innerHTML = "";
+            input.value = "";
+            input.focus();
         });
-
-        const data = await response.json();
-
-        loading.remove();
-        addMessage(data.answer, "ai");
-
-    } catch(error) {
-        loading.remove();
-        addMessage(
-            "❌ Something went wrong. Please try again.",
-            "ai"
-        );
-        console.log(error);
-    }
-}
-
-function addMessage(text, type){
-    const div = document.createElement("div");
-
-    div.classList.add("message");
-
-    if(type === "user"){
-        div.classList.add("user-message");
-    } else {
-        div.classList.add("ai-message");
     }
 
-    div.innerHTML = `<p>${text}</p>`;
-
-    messages.appendChild(div);
-    messages.scrollTop = messages.scrollHeight;
-
-    return div;
-}
-
-// 🟢 NEW CHAT CLEAR LOGIC FIXED HERE
-newChatBtn.addEventListener("click", () => {
-    messages.innerHTML = "";
-    input.value = "";
-    input.focus();
 });
