@@ -1,24 +1,53 @@
-document.addEventListener("DOMContentLoaded", () => {
+// Global scope function for New Chat / Clear Chat
+function clearChat() {
+    const messages = document.getElementById("messages");
+    const input = document.getElementById("userInput");
 
+    if (messages) {
+        // Chat area ko completely clear karke default welcome message reset karein
+        messages.replaceChildren(); // Modern & safest way to clear DOM nodes
+
+        const defaultWelcome = document.createElement("div");
+        defaultWelcome.className = "message ai-message";
+        defaultWelcome.innerHTML = `
+            <h2>👋 Welcome to SmartChat AI</h2>
+            <p>Hello! Ask me anything.</p>
+        `;
+        messages.appendChild(defaultWelcome);
+    }
+
+    if (input) {
+        input.value = "";
+        input.focus();
+    }
+}
+
+// App execution
+document.addEventListener("DOMContentLoaded", () => {
     const input = document.getElementById("userInput");
     const sendBtn = document.getElementById("sendBtn");
-    const messages = document.getElementById("messages");
     const newChatBtn = document.getElementById("newChatBtn");
 
-    // Send Button Click
-    sendBtn.addEventListener("click", sendMessage);
+    // Event Listeners
+    if (newChatBtn) {
+        newChatBtn.onclick = clearChat;
+    }
 
-    // Enter Key Press
-    input.addEventListener("keydown", function(e){
-        if(e.key === "Enter" && !e.shiftKey){
-            e.preventDefault();
-            sendMessage();
-        }
-    });
+    if (sendBtn) {
+        sendBtn.addEventListener("click", sendMessage);
+    }
+
+    if (input) {
+        input.addEventListener("keydown", function(e){
+            if(e.key === "Enter" && !e.shiftKey){
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    }
 
     async function sendMessage(){
         const text = input.value.trim();
-
         if(text === "") return;
 
         addMessage(text, "user");
@@ -32,13 +61,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({
-                    message: text
-                })
+                body: JSON.stringify({ message: text })
             });
 
             const data = await response.json();
-
             loading.remove();
             addMessage(data.answer, "ai");
 
@@ -53,8 +79,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function addMessage(text, type){
-        const div = document.createElement("div");
+        const messages = document.getElementById("messages");
+        if(!messages) return;
 
+        const div = document.createElement("div");
         div.classList.add("message");
 
         if(type === "user"){
@@ -64,21 +92,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         div.innerHTML = `<p>${text}</p>`;
-
         messages.appendChild(div);
         messages.scrollTop = messages.scrollHeight;
 
         return div;
     }
-
-    // ➕ NEW CHAT / CLEAR CHAT LOGIC
-    if(newChatBtn) {
-        newChatBtn.addEventListener("click", () => {
-            // Screen se sare messages clear kar do
-            messages.innerHTML = "";
-            input.value = "";
-            input.focus();
-        });
-    }
-
 });
