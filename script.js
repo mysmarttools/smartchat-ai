@@ -2,54 +2,115 @@ const input = document.getElementById("userInput");
 const sendBtn = document.getElementById("sendBtn");
 const messages = document.getElementById("messages");
 
-// Send Button
+
 sendBtn.addEventListener("click", sendMessage);
 
-// Press Enter
-input.addEventListener("keydown", function (e) {
-    if (e.key === "Enter" && !e.shiftKey) {
+
+input.addEventListener("keydown", function(e){
+
+    if(e.key === "Enter" && !e.shiftKey){
+
         e.preventDefault();
         sendMessage();
+
     }
+
 });
 
-function sendMessage() {
+
+async function sendMessage(){
 
     const text = input.value.trim();
 
-    if (text === "") return;
+    if(text === "") return;
 
-    // User Message
-    addMessage(text, "user");
 
-    input.value = "";
+    addMessage(text,"user");
 
-    // Fake AI Thinking
-    setTimeout(() => {
+    input.value="";
 
-        addMessage("🤖 Thinking...", "ai");
 
-    }, 500);
+    const loading = addMessage("🤖 Thinking...","ai");
+
+
+    try{
+
+
+        const response = await fetch("/api/chat",{
+
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify({
+
+                message:text
+
+            })
+
+        });
+
+
+        const data = await response.json();
+
+
+        loading.remove();
+
+
+        addMessage(data.answer,"ai");
+
+
+    }catch(error){
+
+
+        loading.remove();
+
+
+        addMessage(
+            "❌ Something went wrong. Please try again.",
+            "ai"
+        );
+
+
+        console.log(error);
+
+    }
 
 }
 
-// Add Message
-function addMessage(text, type) {
 
-    const message = document.createElement("div");
 
-    message.classList.add("message");
+function addMessage(text,type){
 
-    if (type === "user") {
-        message.classList.add("user-message");
-    } else {
-        message.classList.add("ai-message");
+
+    const div=document.createElement("div");
+
+
+    div.classList.add("message");
+
+
+    if(type==="user"){
+
+        div.classList.add("user-message");
+
+    }else{
+
+        div.classList.add("ai-message");
+
     }
 
-    message.innerHTML = `<p>${text}</p>`;
 
-    messages.appendChild(message);
+    div.innerHTML=`<p>${text}</p>`;
 
-    messages.scrollTop = messages.scrollHeight;
+
+    messages.appendChild(div);
+
+
+    messages.scrollTop=messages.scrollHeight;
+
+
+    return div;
 
 }
