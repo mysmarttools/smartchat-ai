@@ -5,118 +5,71 @@ const newChatBtn = document.getElementById("newChatBtn");
 
 sendBtn.addEventListener("click", sendMessage);
 
-
 input.addEventListener("keydown", function(e){
-
     if(e.key === "Enter" && !e.shiftKey){
-
         e.preventDefault();
         sendMessage();
-
     }
-
 });
 
-
 async function sendMessage(){
-
     const text = input.value.trim();
 
     if(text === "") return;
 
+    addMessage(text, "user");
+    input.value = "";
 
-    addMessage(text,"user");
+    const loading = addMessage("🤖 Thinking...", "ai");
 
-    input.value="";
-
-
-    const loading = addMessage("🤖 Thinking...","ai");
-
-
-    try{
-
-
-        const response = await fetch("/api/chat",{
-
-            method:"POST",
-
-            headers:{
-                "Content-Type":"application/json"
+    try {
+        const response = await fetch("/api/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
             },
-
-            body:JSON.stringify({
-
-                message:text
-
+            body: JSON.stringify({
+                message: text
             })
-
         });
-
 
         const data = await response.json();
 
-
         loading.remove();
+        addMessage(data.answer, "ai");
 
-
-        addMessage(data.answer,"ai");
-
-
-    }catch(error){
-
-
+    } catch(error) {
         loading.remove();
-
-
         addMessage(
             "❌ Something went wrong. Please try again.",
             "ai"
         );
-
-
         console.log(error);
-
     }
-
 }
 
-
-
-function addMessage(text,type){
-
-
-    const div=document.createElement("div");
-
+function addMessage(text, type){
+    const div = document.createElement("div");
 
     div.classList.add("message");
 
-
-    if(type==="user"){
-
+    if(type === "user"){
         div.classList.add("user-message");
-
-    }else{
-
+    } else {
         div.classList.add("ai-message");
-
     }
 
-
-    div.innerHTML=`<p>${text}</p>`;
-
+    div.innerHTML = `<p>${text}</p>`;
 
     messages.appendChild(div);
-
-
-    messages.scrollTop=messages.scrollHeight;
-
+    messages.scrollTop = messages.scrollHeight;
 
     return div;
-
 }
 
-
-
+// 🟢 NEW CHAT CLEAR LOGIC FIXED HERE
 newChatBtn.addEventListener("click", () => {
-    alert("Button Working");
+    messages.innerHTML = "";
+    input.value = "";
+    input.focus();
 });
