@@ -115,19 +115,7 @@ function addMessage(text,type){
 
 }
 
-newChatBtn.addEventListener("click", () => {
 
-    messages.innerHTML = `
-        <div class="message ai-message">
-            <h2>👋 Welcome to SmartChat AI</h2>
-            <p>Hello! Ask me anything.</p>
-        </div>
-    `;
-
-    input.value = "";
-    input.focus();
-
-});
 
 newChatBtn.addEventListener("click", () => {
     alert("Button Working");
