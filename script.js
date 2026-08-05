@@ -6,9 +6,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const newChatBtn = document.getElementById("newChatBtn");
     const historyList = document.getElementById("historyList");
 
-    // Current Chat
-    let currentChat = [];
-
     loadHistory();
 
     sendBtn.addEventListener("click", sendMessage);
@@ -16,16 +13,15 @@ document.addEventListener("DOMContentLoaded", () => {
     input.addEventListener("keydown", function (e) {
 
         if (e.key === "Enter" && !e.shiftKey) {
+
             e.preventDefault();
             sendMessage();
+
         }
 
     });
 
-    // New Chat
     newChatBtn.addEventListener("click", () => {
-
-        currentChat = [];
 
         messages.innerHTML = `
             <div class="message ai-message">
@@ -46,6 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (text === "") return;
 
         addMessage(text, "user");
+        saveHistory(text);
 
         input.value = "";
 
@@ -72,14 +69,6 @@ document.addEventListener("DOMContentLoaded", () => {
             loading.remove();
 
             addMessage(data.answer, "ai");
-
-            // Save Current Conversation
-            currentChat.push({
-                question: text,
-                answer: data.answer
-            });
-
-            saveHistory();
 
         } catch (error) {
 
@@ -115,19 +104,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-    // Save Conversation
-    function saveHistory() {
-
-        if (currentChat.length === 0) return;
+    function saveHistory(message) {
 
         let chats = JSON.parse(localStorage.getItem("chatHistory")) || [];
 
-        // Remove old copy of current chat
-        chats = chats.filter(chat => {
-            return JSON.stringify(chat) !== JSON.stringify(currentChat);
-        });
-
-        chats.unshift([...currentChat]);
+        chats.unshift(message);
 
         chats = chats.slice(0, 10);
 
@@ -137,7 +118,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-    // Load Sidebar
     function loadHistory() {
 
         let chats = JSON.parse(localStorage.getItem("chatHistory")) || [];
@@ -148,20 +128,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const li = document.createElement("li");
 
-            li.textContent = chat[0]?.question || "New Chat";
+            li.textContent = chat;
 
             li.addEventListener("click", () => {
 
-                messages.innerHTML = "";
-
-                currentChat = [...chat];
-
-                currentChat.forEach(item => {
-
-                    addMessage(item.question, "user");
-                    addMessage(item.answer, "ai");
-
-                });
+                input.value = chat;
+                input.focus();
 
             });
 
