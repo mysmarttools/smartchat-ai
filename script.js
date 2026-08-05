@@ -6,6 +6,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const newChatBtn = document.getElementById("newChatBtn");
     const historyList = document.getElementById("historyList");
 
+    // Current Chat
+    let currentChat = [];
+
     loadHistory();
 
     sendBtn.addEventListener("click", sendMessage);
@@ -13,15 +16,16 @@ document.addEventListener("DOMContentLoaded", () => {
     input.addEventListener("keydown", function (e) {
 
         if (e.key === "Enter" && !e.shiftKey) {
-
             e.preventDefault();
             sendMessage();
-
         }
 
     });
 
+    // New Chat
     newChatBtn.addEventListener("click", () => {
+
+        currentChat = [];
 
         messages.innerHTML = `
             <div class="message ai-message">
@@ -69,8 +73,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
             addMessage(data.answer, "ai");
 
-            // Save Question + Answer
-            saveHistory(text, data.answer);
+            // Save Current Conversation
+            currentChat.push({
+                question: text,
+                answer: data.answer
+            });
+
+            saveHistory();
 
         } catch (error) {
 
@@ -106,15 +115,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-    // Save Question + Answer
-    function saveHistory(question, answer) {
+    // Save Conversation
+    function saveHistory() {
+
+        if (currentChat.length === 0) return;
 
         let chats = JSON.parse(localStorage.getItem("chatHistory")) || [];
 
-        chats.unshift({
-            question: question,
-            answer: answer
+        // Remove old copy of current chat
+        chats = chats.filter(chat => {
+            return JSON.stringify(chat) !== JSON.stringify(currentChat);
         });
+
+        chats.unshift([...currentChat]);
 
         chats = chats.slice(0, 10);
 
@@ -135,14 +148,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const li = document.createElement("li");
 
-            li.textContent = chat.question;
+            li.textContent = chat[0]?.question || "New Chat";
 
             li.addEventListener("click", () => {
 
                 messages.innerHTML = "";
 
-                addMessage(chat.question, "user");
-                addMessage(chat.answer, "ai");
+                currentChat = [...chat];
+
+                currentChat.forEach(item => {
+
+                    addMessage(item.question, "user");
+                    addMessage(item.answer, "ai");
+
+                });
 
             });
 
