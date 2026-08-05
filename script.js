@@ -13,16 +13,16 @@ document.addEventListener("DOMContentLoaded", () => {
     // Load Previous History
     loadHistory();
 
-    // Send Button Event (Click & Touch for Mobile)
+    // Send Button Event (Desktop + Mobile Touch Fix)
     if (sendBtn) {
         sendBtn.addEventListener("click", sendMessage);
         sendBtn.addEventListener("touchend", (e) => {
-            e.preventDefault(); // Mobile double tap issue fix
+            e.preventDefault(); // Prevents double firing on mobile
             sendMessage();
         });
     }
 
-    // Mobile Keyboard Fix (Enter key press)
+    // Input Keydown Event
     if (input) {
         input.addEventListener("keydown", (e) => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // New Chat Button (Desktop + Mobile Touch)
+    // New Chat Button Event
     if (newChatBtn) {
         const handleNewChat = () => {
             currentChat = [];
@@ -53,17 +53,17 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Send Message Logic
+    // Send Message
     async function sendMessage() {
         const text = input.value.trim();
         if (!text) return;
 
         addMessage(text, "user");
         input.value = "";
-        
-        // Mobile keyboard blur (optional: keeps input smooth)
-        if(window.innerWidth < 768){
-            input.blur(); 
+
+        // Hide keyboard on small screens after send
+        if (window.innerWidth < 768) {
+            input.blur();
         }
 
         const loading = addMessage("🤖 Thinking...", "ai");
@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Add Message Logic
+    // Add Message
     function addMessage(text, type) {
         const div = document.createElement("div");
         div.className = "message " + (type === "user" ? "user-message" : "ai-message");
@@ -107,7 +107,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         messages.appendChild(div);
 
-        // Mobile Safe Auto Scroll
+        // Mobile-Safe Auto Scroll
         setTimeout(() => {
             const chatArea = document.querySelector(".chat-area");
             if (chatArea) {
@@ -124,11 +124,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let chats = JSON.parse(localStorage.getItem("chatHistory")) || [];
 
+        // Remove duplicate conversation
         chats = chats.filter(chat =>
             JSON.stringify(chat) !== JSON.stringify(currentChat)
         );
 
+        // Add latest chat on top
         chats.unshift([...currentChat]);
+
+        // Keep only last 10 chats
         chats = chats.slice(0, 10);
 
         localStorage.setItem("chatHistory", JSON.stringify(chats));
