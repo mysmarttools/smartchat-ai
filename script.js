@@ -128,3 +128,7 @@ newChatBtn.addEventListener("click", () => {
     input.focus();
 
 });
+
+newChatBtn.addEventListener("click", () => {
+    alert("Button Working");
+});
