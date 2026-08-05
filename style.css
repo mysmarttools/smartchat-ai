@@ -1,90 +1,290 @@
 /* ===========================
-   MAIN WORKSPACE
+   RESET & BASE STYLES
 =========================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
 
-.main-workspace{
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    overflow:hidden;
+body {
+    background: #0f172a;
+    color: #fff;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Body scroll prevent karne ke liye */
 }
 
 /* ===========================
-   CHAT AREA
+   HEADER
 =========================== */
-
-.chat-area{
-    flex:1;
-    overflow-y:auto;
-    padding:30px;
+.header {
+    height: 60px;
+    background: #1e293b;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 25px;
+    border-bottom: 1px solid #334155;
+    flex-shrink: 0;
 }
 
-.messages{
-    max-width:900px;
-    margin:0 auto;
-    display:flex;
-    flex-direction:column;
-    gap:15px;
+.logo {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.theme-btn {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
 }
 
 /* ===========================
-   RECENT CHAT HISTORY
+   MAIN CONTAINER (CRITICAL FOR FLEX LAYOUT)
 =========================== */
-
-.chat-history{
-    margin-top:20px;
-    flex:1;
-    overflow-y:auto;
-}
-
-.chat-history h3{
-    color:#fff;
-    font-size:18px;
-    margin-bottom:15px;
-}
-
-.chat-history ul{
-    list-style:none;
-    padding:0;
-    margin:0;
-}
-
-.chat-history li{
-    background:#111827;
-    color:#fff;
-    padding:12px;
-    margin-bottom:10px;
-    border-radius:10px;
-    cursor:pointer;
-    transition:.3s;
-    border:1px solid rgba(255,255,255,.08);
-
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-}
-
-.chat-history li:hover{
-    background:#2563eb;
+.container {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
 }
 
 /* ===========================
-   NEW CHAT BUTTON
+   SIDEBAR & CHAT HISTORY
 =========================== */
-
-.new-chat-btn{
-    width:100%;
-    padding:14px;
-    border:none;
-    border-radius:10px;
-    background:#2563eb;
-    color:#fff;
-    font-size:16px;
-    font-weight:600;
-    cursor:pointer;
-    margin-bottom:20px;
+.sidebar {
+    width: 280px;
+    background: #1e293b;
+    border-right: 1px solid #334155;
+    padding: 20px 15px;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
 }
 
-.new-chat-btn:hover{
-    background:#1d4ed8;
+.new-chat-btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    background: #2563eb;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-bottom: 20px;
+    flex-shrink: 0;
+}
+
+.new-chat-btn:hover {
+    background: #1d4ed8;
+}
+
+.chat-history {
+    margin-top: 10px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.chat-history::-webkit-scrollbar {
+    width: 5px;
+}
+
+.chat-history::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 10px;
+}
+
+.chat-history h3 {
+    color: #94a3b8;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 15px;
+}
+
+.chat-history ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.chat-history li {
+    background: #0f172a;
+    color: #fff;
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+    border: 1px solid rgba(255, 255, 255, .08);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 14px;
+}
+
+.chat-history li:hover {
+    background: #2563eb;
+}
+
+/* ===========================
+   MAIN WORKSPACE & CHAT AREA
+=========================== */
+.main-workspace {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #0f172a;
+}
+
+.chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 30px 20px;
+}
+
+.chat-area::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-area::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 10px;
+}
+
+.messages {
+    max-width: 850px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.message {
+    padding: 16px 20px;
+    border-radius: 12px;
+    font-size: 15px;
+    line-height: 1.6;
+    word-break: break-word;
+}
+
+.user-message {
+    background: #2563eb;
+    color: #fff;
+    align-self: flex-end;
+    max-width: 75%;
+    border-bottom-right-radius: 3px;
+}
+
+.ai-message {
+    background: #1e293b;
+    color: #f1f5f9;
+    align-self: flex-start;
+    max-width: 85%;
+    border-left: 4px solid #2563eb;
+    border-bottom-left-radius: 3px;
+}
+
+.ai-message h2 {
+    font-size: 18px;
+    margin-bottom: 6px;
+    color: #60a5fa;
+}
+
+/* ===========================
+   INPUT AREA
+=========================== */
+.input-area {
+    max-width: 850px;
+    width: 100%;
+    margin: 0 auto 20px auto;
+    padding: 10px 15px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+textarea {
+    flex: 1;
+    height: 45px;
+    resize: none;
+    border: none;
+    background: transparent;
+    color: #fff;
+    font-size: 15px;
+    padding: 10px 5px;
+}
+
+textarea:focus {
+    outline: none;
+}
+
+#sendBtn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+#sendBtn:hover {
+    background: #1d4ed8;
+}
+
+/* ===========================
+   FOOTER
+=========================== */
+footer {
+    text-align: center;
+    padding: 10px;
+    background: #0f172a;
+    color: #64748b;
+    font-size: 12px;
+    border-top: 1px solid #1e293b;
+    flex-shrink: 0;
+}
+
+/* ===========================
+   MOBILE RESPONSIVE
+=========================== */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        padding: 10px 15px;
+        border-right: none;
+        border-bottom: 1px solid #334155;
+    }
+
+    .chat-history {
+        display: none;
+    }
+
+    .new-chat-btn {
+        margin-bottom: 0;
+    }
+
+    .input-area {
+        margin: 0;
+        border-radius: 0;
+        border: none;
+        border-top: 1px solid #334155;
+    }
 }
