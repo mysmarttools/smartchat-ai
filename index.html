@@ -3,26 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>SmartChat AI - AI Assistant</title>
-
     <meta name="description" content="Ask anything with SmartChat AI. Fast, smart and free AI assistant.">
-
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <!-- Header -->
     <header class="header">
-
         <div class="logo">
             🤖 SmartChat AI
         </div>
-
         <button class="theme-btn">
             🌙
         </button>
-
     </header>
 
     <!-- Main Container -->
@@ -30,77 +24,48 @@
 
         <!-- Sidebar -->
         <aside class="sidebar">
-
-            <button class="new-chat-btn" id="newChatBtn">
+            <!-- Added Direct onclick Fallback -->
+            <button class="new-chat-btn" id="newChatBtn" onclick="clearChat()">
                 ➕ New Chat
             </button>
 
             <div class="chat-history">
-
                 <h3>Recent Chats</h3>
-
                 <ul>
-
                     <li>SEO Tips</li>
-
                     <li>Homework</li>
-
                     <li>Coding Help</li>
-
                     <li>Travel Guide</li>
-
                 </ul>
-
             </div>
-
         </aside>
 
         <!-- Chat Area -->
         <main class="chat-area">
-
             <div class="messages" id="messages">
-
                 <div class="message ai-message">
-
                     <h2>👋 Welcome to SmartChat AI</h2>
-
-                    <p>
-                        Hello! Ask me anything.
-                    </p>
-
+                    <p>Hello! Ask me anything.</p>
                 </div>
-
             </div>
-
         </main>
 
     </div>
 
     <!-- Input Area -->
     <div class="input-area">
-
-        <textarea
-            id="userInput"
-            placeholder="Type your message..."
-        ></textarea>
-
+        <textarea id="userInput" placeholder="Type your message..."></textarea>
         <button id="sendBtn">
             Send ➜
         </button>
-
     </div>
 
     <!-- Footer -->
     <footer>
-
-        <p>
-            © 2026 SmartChat AI. All Rights Reserved.
-        </p>
-
+        <p>© 2026 SmartChat AI. All Rights Reserved.</p>
     </footer>
 
-    <!-- Defer added to prevent script execution before DOM load -->
+    <!-- Defer Script -->
     <script src="script.js" defer></script>
-
 </body>
 </html>
