@@ -3,7 +3,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const sendBtn = document.getElementById("sendBtn");
     const messages = document.getElementById("messages");
     const newChatBtn = document.getElementById("newChatBtn");
-
+    const historyList = document.getElementById("historyList");
+    
     // Send Button Click
     if (sendBtn) {
         sendBtn.addEventListener("click", sendMessage);
@@ -15,6 +16,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage();
+                addMessage(text, "user");
+                saveHistory(text);
             }
         });
     }
@@ -85,3 +88,42 @@ document.addEventListener("DOMContentLoaded", () => {
         return div;
     }
 });
+
+function saveHistory(message) {
+
+    let chats = JSON.parse(localStorage.getItem("chatHistory")) || [];
+
+    chats.unshift(message);
+
+    chats = chats.slice(0, 10);
+
+    localStorage.setItem("chatHistory", JSON.stringify(chats));
+
+    loadHistory();
+
+}
+
+function loadHistory() {
+
+    let chats = JSON.parse(localStorage.getItem("chatHistory")) || [];
+
+    historyList.innerHTML = "";
+
+    chats.forEach(chat => {
+
+        const li = document.createElement("li");
+
+        li.textContent = chat;
+
+        li.onclick = () => {
+            input.value = chat;
+            input.focus();
+        };
+
+        historyList.appendChild(li);
+
+    });
+
+}
+
+loadHistory();
