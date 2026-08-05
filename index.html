@@ -24,8 +24,7 @@
 
         <!-- Sidebar -->
         <aside class="sidebar">
-            <!-- Added Direct onclick Fallback -->
-            <button class="new-chat-btn" id="newChatBtn" onclick="clearChat()">
+            <button class="new-chat-btn" id="newChatBtn">
                 ➕ New Chat
             </button>
 
@@ -40,24 +39,24 @@
             </div>
         </aside>
 
-        <!-- Chat Area -->
-        <main class="chat-area">
-            <div class="messages" id="messages">
-                <div class="message ai-message">
-                    <h2>👋 Welcome to SmartChat AI</h2>
-                    <p>Hello! Ask me anything.</p>
+        <!-- Main Workspace (Chat Area + Input) -->
+        <main class="main-workspace">
+            <div class="chat-area">
+                <div class="messages" id="messages">
+                    <div class="message ai-message">
+                        <h2>👋 Welcome to SmartChat AI</h2>
+                        <p>Hello! Ask me anything.</p>
+                    </div>
                 </div>
+            </div>
+
+            <!-- Input Area inside Workspace -->
+            <div class="input-area">
+                <textarea id="userInput" placeholder="Type your message..."></textarea>
+                <button id="sendBtn">Send ➜</button>
             </div>
         </main>
 
-    </div>
-
-    <!-- Input Area -->
-    <div class="input-area">
-        <textarea id="userInput" placeholder="Type your message..."></textarea>
-        <button id="sendBtn">
-            Send ➜
-        </button>
     </div>
 
     <!-- Footer -->
@@ -65,7 +64,6 @@
         <p>© 2026 SmartChat AI. All Rights Reserved.</p>
     </footer>
 
-    <!-- Defer Script -->
     <script src="script.js" defer></script>
 </body>
 </html>
