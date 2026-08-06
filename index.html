@@ -2,25 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AISmartChat – Best Free AI Chat Assistant | Chat with AI Online</title>
-    <meta name="description" content="AISmartChat is a free AI chat assistant that helps you write content, answer questions, generate ideas, solve coding problems, and boost productivity instantly.">
-    <meta name="keywords" content="AI Chat, AI Chatbot, ChatGPT Alternative, Free AI Chat, AI Assistant, Online AI Chat, Smart AI Chat, AI Writing Assistant, Coding AI, AISmartChat">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AISmartChat – Best Free AI Chat Assistant</title>
+    <meta name="description" content="AISmartChat is a free AI chat assistant.">
     <link rel="canonical" href="https://aismartchat.vercel.app/">
     <link rel="stylesheet" href="style.css">
-
-    <meta name="google-site-verification" content="WRGpDVpImF-0j7W4-R46kCK4xEcN7Ti1sP1Z_BGMXEs" />
 </head>
 <body>
 
     <!-- Header -->
     <header class="header">
-        <div class="logo">
-            🤖 SmartChat AI
-        </div>
-        <button class="theme-btn">
-            🌙
-        </button>
+        <div class="logo">🤖 SmartChat AI</div>
+        <button class="theme-btn">🌙</button>
     </header>
 
     <!-- Main Container -->
@@ -28,19 +21,16 @@
 
         <!-- Sidebar -->
         <aside class="sidebar">
-            <button class="new-chat-btn" id="newChatBtn">
-                ➕ New Chat
-            </button>
-
+            <button class="new-chat-btn" id="newChatBtn">➕ New Chat</button>
             <div class="chat-history">
                 <h3>Recent Chats</h3>
                 <ul id="historyList"></ul>
             </div>
         </aside>
 
-        <!-- Main Workspace (Chat Area + Input) -->
+        <!-- Main Workspace -->
         <main class="main-workspace">
-            <div class="chat-area">
+            <div class="chat-area" id="chatArea">
                 <div class="messages" id="messages">
                     <div class="message ai-message">
                         <h2>👋 Welcome to SmartChat AI</h2>
@@ -49,16 +39,15 @@
                 </div>
             </div>
 
-            <!-- Mobile-Friendly Form Wrapped Input Area -->
+            <!-- Mobile-Optimized Input Form -->
             <form class="input-area" id="chatForm">
-                <textarea id="userInput" placeholder="Type your message..." rows="1"></textarea>
+                <input type="text" id="userInput" placeholder="Type your message..." autocomplete="off" />
                 <button type="submit" id="sendBtn">Send ➜</button>
             </form>
         </main>
 
     </div>
 
-    <!-- Footer -->
     <footer>
         <p>© 2026 SmartChat AI. All Rights Reserved.</p>
     </footer>
