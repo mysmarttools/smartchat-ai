@@ -11,29 +11,23 @@ export default async function handler(req, res) {
         let body = req.body;
 
         if (typeof body === "string") {
-
             try {
-
                 body = JSON.parse(body);
-
             } catch (e) {}
-
         }
 
-        const message = body?.message;
+        const message = body?.message?.trim();
 
-        if (!message || !message.trim()) {
-
+        if (!message) {
             return res.status(400).json({
                 error: "Message is required."
             });
-
         }
 
         const lowerMsg = message.toLowerCase();
 
         /* ==========================================
-           AI IMAGE / LOGO GENERATOR
+           IMAGE / LOGO GENERATOR
         ========================================== */
 
         const imageKeywords = [
@@ -49,14 +43,17 @@ export default async function handler(req, res) {
             "/image"
         ];
 
-        const isImageRequest = imageKeywords.some(word =>
-            lowerMsg.includes(word)
+        const isImageRequest = imageKeywords.some(keyword =>
+            lowerMsg.includes(keyword)
         );
 
         if (isImageRequest) {
 
             const cleanPrompt = message
-                .replace(/generate|create|design|draw|logo|image|picture|for|\/image/gi, "")
+                .replace(
+                    /generate|create|design|draw|logo|image|picture|for|\/image/gi,
+                    ""
+                )
                 .trim();
 
             const prompt = cleanPrompt || message;
@@ -64,14 +61,14 @@ export default async function handler(req, res) {
             const imageUrl =
                 `https://image.pollinations.ai/prompt/${encodeURIComponent(
                     prompt +
-                    ", professional modern logo, clean vector, minimal, white background, 8k"
-                )}?seed=${Date.now()}&width=768&height=768&nologo=true`;
+                    ", professional modern logo, clean vector, minimal, white background, 8k, high quality"
+                )}?width=768&height=768&seed=${Date.now()}&nologo=true`;
 
             return res.status(200).json({
 
                 type: "image",
 
-                answer: `🎨 Creating image for: ${prompt}`,
+                answer: `🎨 Creating image for "${prompt}"`,
 
                 imageUrl
 
@@ -80,8 +77,11 @@ export default async function handler(req, res) {
         }
 
         /* ==========================================
-           LIVE WEB SEARCH (TAVILY)
+           LIVE WEB SEARCH
         ========================================== */
+
+        const forceWebSearch =
+            body?.webSearch === true;
 
         const searchKeywords = [
 
@@ -96,18 +96,29 @@ export default async function handler(req, res) {
             "update",
             "who is",
             "what is",
-            "find"
+            "find",
+            "stock",
+            "bitcoin",
+            "gold",
+            "football",
+            "cricket"
 
         ];
 
         const isSearchReq =
-            searchKeywords.some(word =>
-                lowerMsg.includes(word)
+
+            forceWebSearch ||
+
+            searchKeywords.some(keyword =>
+                lowerMsg.includes(keyword)
             );
 
         let webSearchContext = "";
 
-        if (isSearchReq && process.env.TAVILY_API_KEY) {
+        if (
+            isSearchReq &&
+            process.env.TAVILY_API_KEY
+        ) {
 
             try {
 
@@ -120,9 +131,7 @@ export default async function handler(req, res) {
                         method: "POST",
 
                         headers: {
-
                             "Content-Type": "application/json"
-
                         },
 
                         body: JSON.stringify({
@@ -134,11 +143,11 @@ export default async function handler(req, res) {
 
                             search_depth: "advanced",
 
-                            max_results: 5,
-
                             include_answer: true,
 
-                            include_images: false
+                            include_images: false,
+
+                            max_results: 5
 
                         })
 
@@ -156,7 +165,10 @@ export default async function handler(req, res) {
 
                 }
 
-                if (tavily.results) {
+                if (
+                    tavily.results &&
+                    tavily.results.length
+                ) {
 
                     webSearchContext +=
                         "Sources:\n\n";
@@ -164,7 +176,7 @@ export default async function handler(req, res) {
                     tavily.results.forEach(item => {
 
                         webSearchContext +=
-                            `${item.title}\n${item.url}\n\n`;
+                            `• ${item.title}\n${item.url}\n\n`;
 
                     });
 
@@ -173,7 +185,7 @@ export default async function handler(req, res) {
             } catch (err) {
 
                 console.log(
-                    "Tavily Search Error:",
+                    "Tavily Error:",
                     err.message
                 );
 
@@ -182,7 +194,7 @@ export default async function handler(req, res) {
         }
 
         /* ==========================================
-           GROQ AI CHAT
+           GROQ AI
         ========================================== */
 
         if (!process.env.GROQ_API_KEY) {
@@ -196,24 +208,32 @@ export default async function handler(req, res) {
         }
 
         let systemPrompt = `
+
 You are SmartChat AI.
 
-You are intelligent, helpful and friendly.
+You are a professional AI assistant.
 
-Always answer professionally.
+Answer clearly and accurately.
 
-If web search results are provided,
-use them to answer accurately.
+If Live Web Search context exists,
+use that information in your answer.
 
-Never say you cannot browse the internet
-if web search context exists.
+If there are source links,
+use them naturally.
+
+Never say you cannot browse
+the internet if search context exists.
+
 `;
 
-        if (webSearchContext) {
+
+            if (webSearchContext) {
 
             systemPrompt += `
 
-Live Web Search:
+========================
+LIVE WEB SEARCH
+========================
 
 ${webSearchContext}
 
@@ -221,16 +241,17 @@ ${webSearchContext}
 
         }
 
+        const response = await fetch(
 
-            const response = await fetch(
             "https://api.groq.com/openai/v1/chat/completions",
+
             {
 
                 method: "POST",
 
                 headers: {
 
-                    "Authorization": `Bearer ${process.env.GROQ_API_KEY.trim()}`,
+                    Authorization: `Bearer ${process.env.GROQ_API_KEY.trim()}`,
 
                     "Content-Type": "application/json"
 
@@ -240,37 +261,48 @@ ${webSearchContext}
 
                     model: "llama-3.3-70b-versatile",
 
+                    temperature: 0.7,
+
+                    max_tokens: 1200,
+
                     messages: [
 
                         {
+
                             role: "system",
+
                             content: systemPrompt
+
                         },
 
                         {
+
                             role: "user",
-                            content: message.trim()
+
+                            content: message
+
                         }
 
-                    ],
-
-                    temperature: 0.7,
-
-                    max_tokens: 1024
+                    ]
 
                 })
 
             }
+
         );
 
         const data = await response.json();
 
         if (!response.ok) {
 
+            console.log(data);
+
             return res.status(response.status).json({
 
                 error:
+
                     data?.error?.message ||
+
                     "Groq API Error"
 
             });
@@ -278,17 +310,20 @@ ${webSearchContext}
         }
 
         let answer =
+
             data?.choices?.[0]?.message?.content ||
+
             "Sorry, I couldn't generate a response.";
 
-        // Add Web Search Badge
-        if (webSearchContext) {
+        // Add badge if Web Search was used
+
+        if (isSearchReq) {
 
             answer += `
 
-────────────────────
+━━━━━━━━━━━━━━━━━━━━━━
 
-🌐 Answer generated using Live Web Search.
+🌐 Live Web Search Enabled
 
 `;
 
@@ -298,17 +333,25 @@ ${webSearchContext}
 
             type: "text",
 
-            answer
+            answer: answer,
+
+            webSearch: isSearchReq
 
         });
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
         console.error(error);
 
         return res.status(500).json({
 
-            error: error.message || "Internal Server Error"
+            error:
+
+                error.message ||
+
+                "Internal Server Error"
 
         });
 
