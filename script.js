@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const input = document.getElementById("userInput");
     const sendBtn = document.getElementById("sendBtn");
     const messages = document.getElementById("messages");
+    const chatArea = document.getElementById("chatArea");
     const newChatBtn = document.getElementById("newChatBtn");
     const historyList = document.getElementById("historyList");
     const chatForm = document.getElementById("chatForm");
@@ -12,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loadHistory();
 
-    // Android & Mobile Form Submission Handler
+    // Form Submit Event (Mobile + Desktop)
     if (chatForm) {
         chatForm.addEventListener("submit", (e) => {
             e.preventDefault();
@@ -20,26 +21,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Enter Key Handler for Textarea (Desktop + Android)
-    if (input) {
-        input.addEventListener("keydown", (e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                if (chatForm) {
-                    chatForm.requestSubmit(); // Triggers proper form submit
-                } else {
-                    sendMessage();
-                }
-            }
-        });
-    }
-
-    // New Chat Button Event
+    // New Chat Button
     if (newChatBtn) {
-        newChatBtn.addEventListener("click", function (e) {
+        newChatBtn.addEventListener("click", (e) => {
             e.preventDefault();
-            e.stopPropagation();
-
             currentChat = [];
             localStorage.removeItem("chatHistory");
 
@@ -68,105 +53,87 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!text) return;
 
         isSending = true;
+        if (sendBtn) sendBtn.disabled = true;
 
-        if (sendBtn) {
-            sendBtn.disabled = true;
-        }
-
+        // 1. Text instantly add karein
         addMessage(text, "user");
         input.value = "";
 
-        // Blur input on mobile after send to collapse keyboard smoothly (Optional)
+        // Mobile keyboard focus handling
         if (window.innerWidth <= 768) {
             input.blur();
         }
 
-        const loading = addMessage("🤖 Thinking...", "ai");
+        // 2. Loading Indicator
+        const loadingDiv = addMessage("🤖 Thinking...", "ai");
 
         try {
-            const response = await fetch(
-                window.location.origin + "/api/chat",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        message: text
-                    })
-                }
-            );
+            const response = await fetch("/api/chat", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ message: text })
+            });
+
+            if (loadingDiv) loadingDiv.remove();
 
             const data = await response.json();
-            loading.remove();
 
             if (!response.ok) {
-                addMessage(
-                    "⚠️ " + (data.error || "API Error"),
-                    "ai"
-                );
+                addMessage("⚠️ " + (data.error || "API Error"), "ai");
                 return;
             }
 
             const answer = data.answer || "No response received.";
             addMessage(answer, "ai");
 
-            currentChat.push({
-                question: text,
-                answer: answer
-            });
-
+            currentChat.push({ question: text, answer: answer });
             saveHistory();
 
         } catch (error) {
-            if (loading) loading.remove();
-
-            addMessage(
-                "❌ Connection error. Please try again.",
-                "ai"
-            );
-            console.error(error);
-
+            if (loadingDiv) loadingDiv.remove();
+            addMessage("❌ Connection error. Please try again.", "ai");
+            console.error("Chat Error:", error);
         } finally {
             isSending = false;
-            if (sendBtn) {
-                sendBtn.disabled = false;
-            }
+            if (sendBtn) sendBtn.disabled = false;
         }
     }
 
     function addMessage(text, type) {
+        if (!messages) return null;
+
         const div = document.createElement("div");
         div.className = "message " + (type === "user" ? "user-message" : "ai-message");
-        div.innerHTML = `<p>${text}</p>`;
+        
+        const p = document.createElement("p");
+        p.textContent = text;
+        div.appendChild(p);
 
         messages.appendChild(div);
 
-        // Mobile Screen Dynamic Scroll Fix
-        requestAnimationFrame(() => {
-            const chatArea = document.querySelector(".chat-area");
+        // Instant Scroll to Bottom
+        setTimeout(() => {
             if (chatArea) {
                 chatArea.scrollTop = chatArea.scrollHeight;
             }
-        });
+        }, 50);
 
         return div;
     }
 
     function saveHistory() {
         if (currentChat.length === 0) return;
-
         let chats = JSON.parse(localStorage.getItem("chatHistory")) || [];
         chats.unshift([...currentChat]);
         chats = chats.slice(0, 10);
-
         localStorage.setItem("chatHistory", JSON.stringify(chats));
         loadHistory();
     }
 
     function loadHistory() {
         if (!historyList) return;
-
         let chats = JSON.parse(localStorage.getItem("chatHistory")) || [];
         historyList.innerHTML = "";
 
@@ -178,19 +145,15 @@ document.addEventListener("DOMContentLoaded", () => {
         chats.forEach((chat, index) => {
             const li = document.createElement("li");
             li.textContent = chat[0]?.question || `Chat ${index + 1}`;
-
             li.onclick = () => {
                 messages.innerHTML = "";
                 currentChat = [...chat];
-
                 currentChat.forEach(item => {
                     addMessage(item.question, "user");
                     addMessage(item.answer, "ai");
                 });
             };
-
             historyList.appendChild(li);
         });
     }
-
 });
