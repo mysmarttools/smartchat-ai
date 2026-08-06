@@ -7,17 +7,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const newChatBtn = document.getElementById("newChatBtn");
     const historyList = document.getElementById("historyList");
 
-    let currentChat = [];
+    let currentConversation = [];
+    let allSessions = JSON.parse(localStorage.getItem("smartChatSessions")) || [];
 
-    // Local Storage se Recent Chats load karna
-    loadHistory();
+    // Page load par pehly se saved history show karein
+    renderHistoryUI();
 
     // ===========================
-    // ➕ NEW CHAT / CLEAR LOGIC
+    // ➕ NEW CHAT BUTTON
     // ===========================
     if (newChatBtn) {
         newChatBtn.addEventListener("click", () => {
-            currentChat = []; // Reset current active chat
+            currentConversation = []; // Reset current active chat session
             messages.innerHTML = `
                 <div class="message ai-message">
                     <h2>👋 Welcome to SmartChat AI</h2>
@@ -33,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ===========================
-    // 📩 FORM SUBMIT & API LOGIC
+    // 📩 FORM SUBMIT LOGIC
     // ===========================
     if (chatForm) {
         chatForm.addEventListener("submit", async (e) => {
@@ -42,13 +43,13 @@ document.addEventListener("DOMContentLoaded", () => {
             const text = input.value.trim();
             if (!text) return;
 
-            // 1. User Message Display
-            addMessage(text, "user");
+            // 1. User message show karein
+            addMessageToDOM(text, "user");
             input.value = "";
             if (window.innerWidth <= 768) input.blur();
 
-            // 2. AI Thinking Indicator
-            const aiDiv = addMessage("🤖 Thinking...", "ai");
+            // 2. AI Thinking indicator
+            const aiDiv = addMessageToDOM("🤖 Thinking...", "ai");
             if (sendBtn) sendBtn.disabled = true;
 
             try {
@@ -64,9 +65,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     const answer = data.answer || "No response";
                     aiDiv.querySelector("p").textContent = answer;
 
-                    // History mein Save karein
-                    currentChat.push({ question: text, answer: answer });
-                    saveHistory();
+                    // 3. Conversation memory update & LocalStorage Sync
+                    currentConversation.push({ question: text, answer: answer });
+                    saveToRecentChats();
                 } else {
                     aiDiv.querySelector("p").textContent = "⚠️ " + (data.error || "API Error");
                 }
@@ -79,8 +80,8 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Helper: Screen par message append karna
-    function addMessage(text, type) {
+    // Helper: Message DOM mein add aur scroll karna
+    function addMessageToDOM(text, type) {
         const div = document.createElement("div");
         div.className = `message ${type === "user" ? "user-message" : "ai-message"}`;
         div.innerHTML = `<p>${text}</p>`;
@@ -90,48 +91,54 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ===========================
-    // 📜 HISTORY & LOCALSTORAGE
+    // 📜 RECENT CHAT SAVING LOGIC
     // ===========================
-    function saveHistory() {
-        if (currentChat.length === 0) return;
-        let chats = JSON.parse(localStorage.getItem("smartChatHistory")) || [];
-        
-        // Agar new session start hua hai to top par insert karein
-        const existingIndex = chats.findIndex(c => JSON.stringify(c) === JSON.stringify(currentChat.slice(0, -1)));
+    function saveToRecentChats() {
+        if (currentConversation.length === 0) return;
+
+        // Check karein ke active conversation pehly se list mein hai ya nayi hai
+        let existingIndex = allSessions.findIndex(session => 
+            session.length > 0 && session[0].question === currentConversation[0].question
+        );
+
         if (existingIndex !== -1) {
-            chats[existingIndex] = [...currentChat];
+            // Purani active conversation ko update karein
+            allSessions[existingIndex] = [...currentConversation];
         } else {
-            chats.unshift([...currentChat]);
+            // Nayi chat top par add karein
+            allSessions.unshift([...currentConversation]);
         }
 
-        // Maximum 10 chats save karein
-        chats = chats.slice(0, 10);
-        localStorage.setItem("smartChatHistory", JSON.stringify(chats));
-        loadHistory();
+        // Limit to last 15 chats
+        allSessions = allSessions.slice(0, 15);
+
+        localStorage.setItem("smartChatSessions", JSON.stringify(allSessions));
+        renderHistoryUI();
     }
 
-    function loadHistory() {
+    function renderHistoryUI() {
         if (!historyList) return;
-        let chats = JSON.parse(localStorage.getItem("smartChatHistory")) || [];
         historyList.innerHTML = "";
 
-        if (chats.length === 0) {
+        if (allSessions.length === 0) {
             historyList.innerHTML = `<li style="opacity:.6; font-size: 13px;">No recent chats</li>`;
             return;
         }
 
-        chats.forEach((chat) => {
+        allSessions.forEach((session, index) => {
+            if (!session || session.length === 0) return;
+
             const li = document.createElement("li");
-            const firstQuestion = chat[0]?.question || "New Conversation";
+            const firstQuestion = session[0].question;
             li.textContent = firstQuestion;
 
-            // Chat reload karne par click event
+            // Click karne par purani chat load karna
             li.onclick = () => {
                 messages.innerHTML = "";
-                currentChat = [...chat];
-                currentChat.forEach(item => {
-                    addMessage(item.question, "user");
-                    addMessage(item.answer, "ai");
+                currentConversation = [...session];
+                currentConversation.forEach(item => {
+                    addMessageToDOM(item.question, "user");
+                    addMessageToDOM(item.answer, "ai");
                 });
             };
 
