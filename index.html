@@ -36,7 +36,7 @@
                 <div class="messages" id="messages">
                     <div class="message ai-message">
                         <h2>👋 Welcome to SmartChat AI</h2>
-                        <p>Hello! Ask me anything.</p>
+                        <p>Hello! Ask me anything or try: <b>"Design a logo for Toynix"</b></p>
                     </div>
                 </div>
             </div>
@@ -54,7 +54,7 @@
         <p>© 2026 SmartChat AI. All Rights Reserved.</p>
     </footer>
 
-    <!-- Direct Backup Inline Script (Guarantees Mobile Rendering) -->
+    <!-- All-In-One Main Script -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const chatForm = document.getElementById("chatForm");
@@ -62,7 +62,31 @@
             const messages = document.getElementById("messages");
             const chatArea = document.getElementById("chatArea");
             const sendBtn = document.getElementById("sendBtn");
+            const newChatBtn = document.getElementById("newChatBtn");
+            const historyList = document.getElementById("historyList");
 
+            let currentConversation = [];
+            let allSessions = JSON.parse(localStorage.getItem("smartChatSessions")) || [];
+
+            // 1. Initial Load Recent History
+            renderHistoryUI();
+
+            // 2. New Chat Button Action
+            if (newChatBtn) {
+                newChatBtn.addEventListener("click", () => {
+                    currentConversation = [];
+                    messages.innerHTML = `
+                        <div class="message ai-message">
+                            <h2>👋 Welcome to SmartChat AI</h2>
+                            <p>Hello! Ask me anything or try: <b>"Design a logo for Toynix"</b></p>
+                        </div>
+                    `;
+                    if (input) { input.value = ""; input.focus(); }
+                    if (chatArea) chatArea.scrollTop = 0;
+                });
+            }
+
+            // 3. Form Submission Handling
             if (chatForm) {
                 chatForm.addEventListener("submit", async (e) => {
                     e.preventDefault();
@@ -70,25 +94,13 @@
                     const text = input.value.trim();
                     if (!text) return;
 
-                    // 1. Force User Text Display immediately
-                    const userDiv = document.createElement("div");
-                    userDiv.className = "message user-message";
-                    userDiv.innerHTML = `<p>${text}</p>`;
-                    messages.appendChild(userDiv);
-
+                    // Display User Message
+                    addMessageToDOM(text, "user");
                     input.value = "";
                     if (window.innerWidth <= 768) input.blur();
 
-                    // Scroll to bottom
-                    if (chatArea) chatArea.scrollTop = chatArea.scrollHeight;
-
-                    // 2. Loading State
-                    const aiDiv = document.createElement("div");
-                    aiDiv.className = "message ai-message";
-                    aiDiv.innerHTML = `<p>🤖 Thinking...</p>`;
-                    messages.appendChild(aiDiv);
-                    if (chatArea) chatArea.scrollTop = chatArea.scrollHeight;
-
+                    // Display AI Thinking Message
+                    const aiDiv = addMessageToDOM("🤖 Thinking...", "ai");
                     if (sendBtn) sendBtn.disabled = true;
 
                     try {
@@ -101,7 +113,25 @@
                         const data = await res.json();
 
                         if (res.ok) {
-                            aiDiv.innerHTML = `<p>${data.answer || "No response"}</p>`;
+                            if (data.type === "image" && data.imageUrl) {
+                                // 🎨 Render Image Response
+                                aiDiv.innerHTML = `
+                                    <p>${data.answer}</p>
+                                    <div style="margin-top: 10px;">
+                                        <img src="${data.imageUrl}" alt="AI Logo" style="width: 100%; max-width: 320px; border-radius: 12px; border: 1px solid #334155; display: block; margin-bottom: 8px;" />
+                                        <a href="${data.imageUrl}" target="_blank" download="smartchat-logo.png" style="display: inline-block; padding: 6px 14px; background: #2563eb; color: #fff; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 600;">📥 Download Logo</a>
+                                    </div>
+                                `;
+                                currentConversation.push({ question: text, answer: "[Generated Logo Image]", imageUrl: data.imageUrl, type: "image", promptTitle: data.answer });
+                            } else {
+                                // 💬 Render Text Response
+                                const answerText = data.answer || "No response";
+                                aiDiv.innerHTML = `<p>${answerText}</p>`;
+                                currentConversation.push({ question: text, answer: answerText, type: "text" });
+                            }
+
+                            // Save to Recent Chats
+                            saveToRecentChats();
                         } else {
                             aiDiv.innerHTML = `<p>⚠️ ${data.error || "API Error"}</p>`;
                         }
@@ -113,15 +143,80 @@
                     }
                 });
             }
+
+            // Helper to add message elements
+            function addMessageToDOM(text, type) {
+                const div = document.createElement("div");
+                div.className = `message ${type === "user" ? "user-message" : "ai-message"}`;
+                div.innerHTML = `<p>${text}</p>`;
+                messages.appendChild(div);
+                if (chatArea) chatArea.scrollTop = chatArea.scrollHeight;
+                return div;
+            }
+
+            // Save Active Chat to LocalStorage
+            function saveToRecentChats() {
+                if (currentConversation.length === 0) return;
+                
+                let existingIndex = allSessions.findIndex(session => 
+                    session.length > 0 && session[0].question === currentConversation[0].question
+                );
+
+                if (existingIndex !== -1) {
+                    allSessions[existingIndex] = [...currentConversation];
+                } else {
+                    allSessions.unshift([...currentConversation]);
+                }
+
+                allSessions = allSessions.slice(0, 15);
+                localStorage.setItem("smartChatSessions", JSON.stringify(allSessions));
+                renderHistoryUI();
+            }
+
+            // Render History List in Sidebar
+            function renderHistoryUI() {
+                if (!historyList) return;
+                historyList.innerHTML = "";
+
+                if (allSessions.length === 0) {
+                    historyList.innerHTML = `<li style="opacity:.6; font-size: 13px;">No recent chats</li>`;
+                    return;
+                }
+
+                allSessions.forEach((session) => {
+                    if (!session || session.length === 0) return;
+
+                    const li = document.createElement("li");
+                    li.textContent = session[0].question;
+
+                    li.onclick = () => {
+                        messages.innerHTML = "";
+                        currentConversation = [...session];
+                        currentConversation.forEach(item => {
+                            addMessageToDOM(item.question, "user");
+                            
+                            if (item.type === "image" && item.imageUrl) {
+                                const aiDiv = document.createElement("div");
+                                aiDiv.className = "message ai-message";
+                                aiDiv.innerHTML = `
+                                    <p>${item.promptTitle || "Generated Image"}</p>
+                                    <div style="margin-top: 10px;">
+                                        <img src="${item.imageUrl}" alt="AI Logo" style="width: 100%; max-width: 320px; border-radius: 12px; border: 1px solid #334155; display: block; margin-bottom: 8px;" />
+                                        <a href="${item.imageUrl}" target="_blank" download="smartchat-logo.png" style="display: inline-block; padding: 6px 14px; background: #2563eb; color: #fff; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 600;">📥 Download Logo</a>
+                                    </div>
+                                `;
+                                messages.appendChild(aiDiv);
+                            } else {
+                                addMessageToDOM(item.answer, "ai");
+                            }
+                        });
+                        if (chatArea) chatArea.scrollTop = chatArea.scrollHeight;
+                    };
+
+                    historyList.appendChild(li);
+                });
+            }
         });
     </script>
-    <script src="script.js" defer></script>
 </body>
 </html>
-
-
-
-
-
-
-
