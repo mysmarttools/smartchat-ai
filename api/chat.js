@@ -1,43 +1,54 @@
- export default async function handler(req, res) {
-    console.log("API HIT | Method:", req.method);
-
-    // 1. Method Check
+export default async function handler(req, res) {
     if (req.method !== "POST") {
-        return res.status(405).json({
-            error: "Method not allowed"
-        });
+        return res.status(405).json({ error: "Method not allowed" });
     }
 
     try {
-        // Safe Body Parsing for Vercel/Node environment
         let body = req.body;
         if (typeof body === "string") {
-            try {
-                body = JSON.parse(body);
-            } catch (e) {
-                console.error("JSON Parsing Error:", e);
-            }
+            try { body = JSON.parse(body); } catch (e) {}
         }
-
-        console.log("PARSED BODY:", body);
 
         const message = body?.message;
-
         if (!message || typeof message !== "string" || !message.trim()) {
-            return res.status(400).json({
-                error: "Message is required and must be a non-empty string."
+            return res.status(400).json({ error: "Message is required." });
+        }
+
+        const lowerMsg = message.toLowerCase();
+
+        // 🎨 Check if user is asking for Logo or Image Generation
+        const isImageRequest = 
+            lowerMsg.includes("logo") || 
+            lowerMsg.includes("design") || 
+            lowerMsg.includes("generate image") || 
+            lowerMsg.includes("draw") || 
+            lowerMsg.includes("create an image") ||
+            lowerMsg.startsWith("/image");
+
+        if (isImageRequest) {
+            // Clean up prompt for image generation
+            const cleanPrompt = message
+                .replace(/generate|create|design|draw|a logo for|a logo|image of|picture of|\/image/gi, "")
+                .trim();
+
+            const finalPrompt = cleanPrompt || message;
+            
+            // Pollinations Free Image Engine URL
+            const encodedPrompt = encodeURIComponent(`${finalPrompt}, clean vector logo design, professional, high resolution, 8k, graphic design`);
+            const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=512&nologo=true&seed=${Math.floor(Math.random() * 1000000)}`;
+
+            return res.status(200).json({
+                type: "image",
+                answer: `Here is your requested logo design for: **"${finalPrompt}"**`,
+                imageUrl: imageUrl
             });
         }
 
-        // 2. Groq API Key Verification
+        // 💬 Regular Chat Response using Groq
         if (!process.env.GROQ_API_KEY) {
-            console.error("CRITICAL ERROR: GROQ_API_KEY is not defined in Environment Variables.");
-            return res.status(500).json({
-                error: "Server configuration error: GROQ_API_KEY is missing."
-            });
+            return res.status(500).json({ error: "GROQ_API_KEY is missing." });
         }
 
-        // 3. Groq Fetch Request
         const response = await fetch(
             "https://api.groq.com/openai/v1/chat/completions",
             {
@@ -49,48 +60,26 @@
                 body: JSON.stringify({
                     model: "llama-3.3-70b-versatile",
                     messages: [
-                        {
-                            role: "system",
-                            content: "You are a helpful AI assistant."
-                        },
-                        {
-                            role: "user",
-                            content: message.trim()
-                        }
+                        { role: "system", content: "You are a helpful AI assistant." },
+                        { role: "user", content: message.trim() }
                     ],
-                    max_tokens: 1024 // Mobile response delay se bachne ke liye limit
+                    max_tokens: 1024
                 })
             }
         );
 
         const data = await response.json();
-        console.log("GROQ RESPONSE STATUS:", response.status);
 
         if (!response.ok) {
-            console.error("GROQ API ERROR DETAILED:", data);
-            return res.status(response.status).json({
-                error: data.error?.message || "Groq API returned an error"
-            });
-        }
-
-        const answer = data.choices?.[0]?.message?.content;
-
-        if (!answer) {
-            return res.status(500).json({
-                error: "No answer string was returned from Groq."
-            });
+            return res.status(response.status).json({ error: data.error?.message || "Groq Error" });
         }
 
         return res.status(200).json({
-            answer: answer
+            type: "text",
+            answer: data.choices?.[0]?.message?.content || "No answer"
         });
 
     } catch (error) {
-        console.error("SERVER CRASH ERROR:", error);
-        return res.status(500).json({
-            error: error.message || "Internal Server Error"
-        });
+        return res.status(500).json({ error: error.message || "Server Error" });
     }
 }
-
-
