@@ -13,13 +13,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Load Previous History
     loadHistory();
 
-    // Send Button Event (Desktop + Mobile Touch Fix)
+    // Send Button Event (click works fine on mobile too, no touchend needed)
     if (sendBtn) {
         sendBtn.addEventListener("click", sendMessage);
-        sendBtn.addEventListener("touchend", (e) => {
-            e.preventDefault(); // Prevents double firing on mobile
-            sendMessage();
-        });
     }
 
     // Input Keydown Event
@@ -47,10 +43,6 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
         newChatBtn.addEventListener("click", handleNewChat);
-        newChatBtn.addEventListener("touchend", (e) => {
-            e.preventDefault();
-            handleNewChat();
-        });
     }
 
     // Send Message
@@ -170,10 +162,6 @@ document.addEventListener("DOMContentLoaded", () => {
             };
 
             li.addEventListener("click", loadSelectedChat);
-            li.addEventListener("touchend", (e) => {
-                e.preventDefault();
-                loadSelectedChat();
-            });
 
             historyList.appendChild(li);
         });
