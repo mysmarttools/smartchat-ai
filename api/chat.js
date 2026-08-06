@@ -16,7 +16,7 @@ export default async function handler(req, res) {
 
         const lowerMsg = message.toLowerCase();
 
-        // 🎨 Check if user is asking for Logo or Image Generation
+        // 🎨 1. Check if user is asking for Logo or Image Generation
         const isImageRequest = 
             lowerMsg.includes("logo") || 
             lowerMsg.includes("design") || 
@@ -44,9 +44,47 @@ export default async function handler(req, res) {
             });
         }
 
-        // 💬 Regular Chat Response using Groq
+        // 🌐 2. WEB SEARCH CHECK
+        // Agar user latest information, news ya search ke baare me pooche
+        const searchKeywords = ["search", "latest", "news", "today", "current", "weather", "price", "who is", "what is", "score", "update"];
+        const isSearchReq = searchKeywords.some(kw => lowerMsg.includes(kw));
+
+        let webSearchContext = "";
+
+        if (isSearchReq) {
+            try {
+                // Free DuckDuckGo Instant Answer Search API
+                const searchResponse = await fetch(
+                    `https://api.duckduckgo.com/?q=${encodeURIComponent(message)}&format=json&no_html=1&skip_disambig=1`
+                );
+                const searchData = await searchResponse.json();
+
+                if (searchData.AbstractText) {
+                    webSearchContext = `[Web Search Snippet]: ${searchData.AbstractText}`;
+                } else if (searchData.RelatedTopics && searchData.RelatedTopics.length > 0) {
+                    const snippets = searchData.RelatedTopics
+                        .slice(0, 3)
+                        .map(item => item.Text)
+                        .filter(Boolean)
+                        .join("\n");
+                    if (snippets) {
+                        webSearchContext = `[Web Search Context]:\n${snippets}`;
+                    }
+                }
+            } catch (err) {
+                console.log("Web search fetch failed, continuing with direct AI response:", err.message);
+            }
+        }
+
+        // 💬 3. Regular Chat Response using Groq
         if (!process.env.GROQ_API_KEY) {
             return res.status(500).json({ error: "GROQ_API_KEY is missing." });
+        }
+
+        // System prompt definition with Web Search awareness
+        let systemPrompt = "You are SmartChat AI, a helpful and smart AI assistant.";
+        if (webSearchContext) {
+            systemPrompt += ` Use the following live web search context to give an accurate, updated answer if relevant:\n${webSearchContext}`;
         }
 
         const response = await fetch(
@@ -60,7 +98,7 @@ export default async function handler(req, res) {
                 body: JSON.stringify({
                     model: "llama-3.3-70b-versatile",
                     messages: [
-                        { role: "system", content: "You are a helpful AI assistant." },
+                        { role: "system", content: systemPrompt },
                         { role: "user", content: message.trim() }
                     ],
                     max_tokens: 1024
