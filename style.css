@@ -411,3 +411,53 @@ flex:2;
 }
 
 }
+
+#voiceBtn,
+#webSearchBtn,
+#sendBtn{
+
+    border:none;
+    cursor:pointer;
+    border-radius:10px;
+    height:42px;
+    padding:0 18px;
+    color:#fff;
+    font-weight:600;
+
+}
+
+#voiceBtn{
+
+    background:#2563eb;
+
+}
+
+#webSearchBtn{
+
+    background:#0ea5e9;
+
+}
+
+#sendBtn{
+
+    background:#10b981;
+
+}
+
+#voiceBtn:hover{
+
+    background:#1d4ed8;
+
+}
+
+#webSearchBtn:hover{
+
+    background:#0284c7;
+
+}
+
+#sendBtn:hover{
+
+    background:#059669;
+
+}
