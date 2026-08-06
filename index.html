@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AISmartChat – Best Free AI Chat Assistant | Chat with AI Online</title>
-<meta name="description" content="AISmartChat is a free AI chat assistant that helps you write content, answer questions, generate ideas, solve coding problems, and boost productivity instantly.">
+    <title>AISmartChat – Best Free AI Chat Assistant | Chat with AI Online</title>
+    <meta name="description" content="AISmartChat is a free AI chat assistant that helps you write content, answer questions, generate ideas, solve coding problems, and boost productivity instantly.">
     <meta name="keywords" content="AI Chat, AI Chatbot, ChatGPT Alternative, Free AI Chat, AI Assistant, Online AI Chat, Smart AI Chat, AI Writing Assistant, Coding AI, AISmartChat">
     <link rel="canonical" href="https://aismartchat.vercel.app/">
     <link rel="stylesheet" href="style.css">
@@ -33,13 +33,9 @@
             </button>
 
             <div class="chat-history">
-
-    <h3>Recent Chats</h3>
-
-    <ul id="historyList">
-    </ul>
-
-</div>
+                <h3>Recent Chats</h3>
+                <ul id="historyList"></ul>
+            </div>
         </aside>
 
         <!-- Main Workspace (Chat Area + Input) -->
@@ -53,11 +49,11 @@
                 </div>
             </div>
 
-            <!-- Input Area inside Workspace -->
-            <div class="input-area">
-                <textarea id="userInput" placeholder="Type your message..."></textarea>
-                <button id="sendBtn">Send ➜</button>
-            </div>
+            <!-- Mobile-Friendly Form Wrapped Input Area -->
+            <form class="input-area" id="chatForm">
+                <textarea id="userInput" placeholder="Type your message..." rows="1"></textarea>
+                <button type="submit" id="sendBtn">Send ➜</button>
+            </form>
         </main>
 
     </div>
@@ -68,6 +64,5 @@
     </footer>
 
     <script src="script.js" defer></script>
-    
 </body>
 </html>
