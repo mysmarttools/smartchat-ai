@@ -34,30 +34,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // New Chat Button Event
 if (newChatBtn) {
-
-    newChatBtn.addEventListener("click", function(e) {
+    newChatBtn.addEventListener("click", function (e) {
 
         e.preventDefault();
-
-        console.log("New Chat Button Clicked");
+        e.stopPropagation();
 
         currentChat = [];
 
         localStorage.removeItem("chatHistory");
 
-        messages.innerHTML = `
-            <div class="message ai-message">
-                <h2>👋 Welcome to SmartChat AI</h2>
-                <p>Hello! Ask me anything.</p>
-            </div>
-        `;
+        const messages = document.getElementById("messages");
 
-        if(input){
-            input.value = "";
+        if (messages) {
+            messages.innerHTML = `
+                <div class="message ai-message">
+                    <h2>👋 Welcome to SmartChat AI</h2>
+                    <p>Hello! Ask me anything.</p>
+                </div>
+            `;
         }
 
-    });
+        if (input) {
+            input.value = "";
+            input.blur();
+        }
 
+        loadHistory();
+
+    });
 }
 
 
