@@ -33,24 +33,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-    if (newChatBtn) {
+   if (newChatBtn) {
 
-        newChatBtn.addEventListener("click", () => {
+    newChatBtn.onclick = function () {
 
-            currentChat = [];
+        console.log("New Chat Clicked");
 
-            messages.innerHTML = `
-                <div class="message ai-message">
-                    <h2>👋 Welcome to SmartChat AI</h2>
-                    <p>Hello! Ask me anything.</p>
-                </div>
-            `;
+        currentChat = [];
 
-            input.value = "";
+        localStorage.removeItem("chatHistory");
 
-        });
+        messages.innerHTML = `
+            <div class="message ai-message">
+                <h2>👋 Welcome to SmartChat AI</h2>
+                <p>Hello! Ask me anything.</p>
+            </div>
+        `;
 
-    }
+        input.value = "";
+
+    };
+
+}
 
 
 
