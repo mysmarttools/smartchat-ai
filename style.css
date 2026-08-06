@@ -8,10 +8,13 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-body {
+html, body {
     background: #0f172a;
     color: #fff;
+    /* Dynamic Viewport Height for Android Soft Keyboards */
     height: 100vh;
+    height: 100dvh; 
+    width: 100%;
     display: flex;
     flex-direction: column;
     overflow: hidden; /* Body scroll prevent karne ke liye */
@@ -26,9 +29,10 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 25px;
+    padding: 0 20px;
     border-bottom: 1px solid #334155;
     flex-shrink: 0;
+    z-index: 10;
 }
 
 .logo {
@@ -44,12 +48,13 @@ body {
 }
 
 /* ===========================
-   MAIN CONTAINER (CRITICAL FOR FLEX LAYOUT)
+   MAIN CONTAINER
 =========================== */
 .container {
     flex: 1;
     display: flex;
     overflow: hidden;
+    position: relative;
 }
 
 /* ===========================
@@ -67,12 +72,12 @@ body {
 
 .new-chat-btn {
     width: 100%;
-    padding: 14px;
+    padding: 12px;
     border: none;
     border-radius: 10px;
     background: #2563eb;
     color: #fff;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
     transition: 0.3s;
@@ -101,10 +106,10 @@ body {
 
 .chat-history h3 {
     color: #94a3b8;
-    font-size: 14px;
+    font-size: 13px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
 }
 
 .chat-history ul {
@@ -117,8 +122,8 @@ body {
     background: #0f172a;
     color: #fff;
     padding: 12px;
-    margin-bottom: 10px;
-    border-radius: 10px;
+    margin-bottom: 8px;
+    border-radius: 8px;
     cursor: pointer;
     transition: 0.3s;
     border: 1px solid rgba(255, 255, 255, .08);
@@ -141,12 +146,14 @@ body {
     flex-direction: column;
     overflow: hidden;
     background: #0f172a;
+    position: relative;
 }
 
 .chat-area {
     flex: 1;
     overflow-y: auto;
-    padding: 30px 20px;
+    padding: 20px 15px;
+    -webkit-overflow-scrolling: touch; /* Smooth Touch Scroll on Mobile */
 }
 
 .chat-area::-webkit-scrollbar {
@@ -164,10 +171,11 @@ body {
     display: flex;
     flex-direction: column;
     gap: 15px;
+    padding-bottom: 10px;
 }
 
 .message {
-    padding: 16px 20px;
+    padding: 14px 18px;
     border-radius: 12px;
     font-size: 15px;
     line-height: 1.6;
@@ -178,7 +186,7 @@ body {
     background: #2563eb;
     color: #fff;
     align-self: flex-end;
-    max-width: 75%;
+    max-width: 80%;
     border-bottom-right-radius: 3px;
 }
 
@@ -186,7 +194,7 @@ body {
     background: #1e293b;
     color: #f1f5f9;
     align-self: flex-start;
-    max-width: 85%;
+    max-width: 90%;
     border-left: 4px solid #2563eb;
     border-bottom-left-radius: 3px;
 }
@@ -203,26 +211,28 @@ body {
 .input-area {
     max-width: 850px;
     width: 100%;
-    margin: 0 auto 20px auto;
-    padding: 10px 15px;
+    margin: 0 auto 15px auto;
+    padding: 8px 12px;
     background: #1e293b;
     border: 1px solid #334155;
     border-radius: 12px;
     display: flex;
-    gap: 12px;
+    gap: 10px;
     align-items: center;
     flex-shrink: 0;
+    z-index: 5;
 }
 
 textarea {
     flex: 1;
-    height: 45px;
+    min-height: 40px;
+    max-height: 120px;
     resize: none;
     border: none;
     background: transparent;
     color: #fff;
     font-size: 15px;
-    padding: 10px 5px;
+    padding: 8px 4px;
 }
 
 textarea:focus {
@@ -230,7 +240,7 @@ textarea:focus {
 }
 
 #sendBtn {
-    padding: 10px 20px;
+    padding: 10px 18px;
     border: none;
     border-radius: 8px;
     background: #2563eb;
@@ -239,6 +249,7 @@ textarea:focus {
     font-weight: 600;
     cursor: pointer;
     transition: 0.2s;
+    flex-shrink: 0;
 }
 
 #sendBtn:hover {
@@ -250,27 +261,32 @@ textarea:focus {
 =========================== */
 footer {
     text-align: center;
-    padding: 10px;
+    padding: 8px;
     background: #0f172a;
     color: #64748b;
-    font-size: 12px;
+    font-size: 11px;
     border-top: 1px solid #1e293b;
     flex-shrink: 0;
 }
 
 /* ===========================
-   MOBILE RESPONSIVE
+   MOBILE RESPONSIVE FIXES
 =========================== */
 @media (max-width: 768px) {
+    /* Container layout fix */
     .container {
         flex-direction: column;
     }
 
+    /* Mobile view mein Sidebar fixed chota toolbar bane ya hide rahe */
     .sidebar {
         width: 100%;
-        padding: 10px 15px;
+        padding: 8px 12px;
         border-right: none;
         border-bottom: 1px solid #334155;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
     }
 
     .chat-history {
@@ -279,12 +295,23 @@ footer {
 
     .new-chat-btn {
         margin-bottom: 0;
+        width: auto;
+        padding: 8px 16px;
+        font-size: 14px;
     }
 
+    /* Fixed Input Area at bottom of Mobile screen */
     .input-area {
         margin: 0;
         border-radius: 0;
         border: none;
         border-top: 1px solid #334155;
+        padding: 10px 12px;
+        background: #1e293b;
+    }
+
+    /* Hide Footer on Mobile to gain screen space for input */
+    footer {
+        display: none;
     }
 }
