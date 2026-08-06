@@ -1,4 +1,62 @@
-document.addEventListener("DOMContentLoaded", () => {
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AISmartChat – Best Free AI Chat Assistant</title>
+    <meta name="description" content="AISmartChat is a free AI chat assistant.">
+    <meta name="keywords" content="AI Chat, AI Chatbot, ChatGPT Alternative, Free AI Chat, AI Assistant, Online AI Chat, Smart AI Chat, AI Writing Assistant, Coding AI, AISmartChat">
+    <link rel="canonical" href="https://aismartchat.vercel.app/">
+    <link rel="stylesheet" href="style.css">
+    <meta name="google-site-verification" content="WRGpDVpImF-0j7W4-R46kCK4xEcN7Ti1sP1Z_BGMXEs" />
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">🤖 SmartChat AI</div>
+        <button class="theme-btn">🌙</button>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <button class="new-chat-btn" id="newChatBtn">➕ New Chat</button>
+            <div class="chat-history">
+                <h3>Recent Chats</h3>
+                <ul id="historyList"></ul>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="main-workspace">
+            <div class="chat-area" id="chatArea">
+                <div class="messages" id="messages">
+                    <div class="message ai-message">
+                        <h2>👋 Welcome to SmartChat AI</h2>
+                        <p>Hello! Ask me anything.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile & Desktop Form Input -->
+            <form class="input-area" id="chatForm" onsubmit="return false;">
+                <input type="text" id="userInput" placeholder="Type your message..." autocomplete="off" />
+                <button type="submit" id="sendBtn">Send ➜</button>
+            </form>
+        </main>
+
+    </div>
+
+    <footer>
+        <p>© 2026 SmartChat AI. All Rights Reserved.</p>
+    </footer>
+
+    <!-- Direct Backup Inline Script (Guarantees Mobile Rendering) -->
+    document.addEventListener("DOMContentLoaded", () => {
     const chatForm = document.getElementById("chatForm");
     const input = document.getElementById("userInput");
     const messages = document.getElementById("messages");
@@ -134,3 +192,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+    <script src="script.js" defer></script>
+</body>
+</html>
+
