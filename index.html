@@ -36,16 +36,19 @@
                 <div class="messages" id="messages">
                     <div class="message ai-message">
                         <h2>👋 Welcome to SmartChat AI</h2>
-                        <p>Hello! Ask me anything, click 🎤 to speak, or try: <b>"Design a logo for Toynix"</b></p>
+                        <p>Hello! Ask me anything...</p>
                     </div>
                 </div>
             </div>
 
             <!-- Mobile & Desktop Form Input with Voice Mic Button -->
-            <form class="input-area" id="chatForm" onsubmit="return false;" style="display: flex; align-items: center; gap: 6px;">
-                <input type="text" id="userInput" placeholder="Type or click 🎤 to speak..." autocomplete="off" style="flex: 1;" />
-                <button type="button" id="micBtn" title="Voice Input" style="background: #334155; border: none; color: #fff; padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: 16px; transition: 0.3s ease;">🎤</button>
-                <button type="submit" id="sendBtn">Send ➜</button>
+            <form class="input-area" id="chatForm" onsubmit="return false;" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #1e293b; border-radius: 10px;">
+                <input type="text" id="userInput" placeholder="Type or click 🎤 to speak..." autocomplete="off" style="flex: 1; min-width: 0; padding: 10px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #fff;" />
+                
+                <!-- Voice Mic Button (Guaranteed Visible) -->
+                <button type="button" id="micBtn" title="Voice Input" style="background: #2563eb; color: #ffffff; border: none; padding: 10px 14px; border-radius: 6px; cursor: pointer; font-size: 18px; display: inline-flex; align-items: center; justify-content: center; min-width: 44px; height: 40px; z-index: 10;">🎤</button>
+                
+                <button type="submit" id="sendBtn" style="padding: 10px 16px; height: 40px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer;">Send ➜</button>
             </form>
         </main>
 
@@ -82,7 +85,7 @@
                 const recognition = new SpeechRecognition();
                 recognition.continuous = false;
                 recognition.interimResults = false;
-                recognition.lang = 'en-US'; // Supports English and basic voice commands
+                recognition.lang = 'en-US'; // English + Basic Urdu/Hindi support
 
                 let isListening = false;
 
@@ -128,7 +131,7 @@
 
                 function resetMicUI() {
                     isListening = false;
-                    micBtn.style.background = "#334155";
+                    micBtn.style.background = "#2563eb";
                     micBtn.textContent = "🎤";
                     input.placeholder = "Type or click 🎤 to speak...";
                 }
