@@ -32,12 +32,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
+// New Chat Button Event
+if (newChatBtn) {
 
-   if (newChatBtn) {
+    newChatBtn.addEventListener("click", function(e) {
 
-    newChatBtn.onclick = function () {
+        e.preventDefault();
 
-        console.log("New Chat Clicked");
+        console.log("New Chat Button Clicked");
 
         currentChat = [];
 
@@ -50,9 +52,11 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
         `;
 
-        input.value = "";
+        if(input){
+            input.value = "";
+        }
 
-    };
+    });
 
 }
 
