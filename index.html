@@ -36,14 +36,15 @@
                 <div class="messages" id="messages">
                     <div class="message ai-message">
                         <h2>👋 Welcome to SmartChat AI</h2>
-                        <p>Hello! Ask me anything or try:</p>
+                        <p>Hello! Ask me anything, click 🎤 to speak, or try: <b>"Design a logo for Toynix"</b></p>
                     </div>
                 </div>
             </div>
 
-            <!-- Mobile & Desktop Form Input -->
-            <form class="input-area" id="chatForm" onsubmit="return false;">
-                <input type="text" id="userInput" placeholder="Type your message..." autocomplete="off" />
+            <!-- Mobile & Desktop Form Input with Voice Mic Button -->
+            <form class="input-area" id="chatForm" onsubmit="return false;" style="display: flex; align-items: center; gap: 6px;">
+                <input type="text" id="userInput" placeholder="Type or click 🎤 to speak..." autocomplete="off" style="flex: 1;" />
+                <button type="button" id="micBtn" title="Voice Input" style="background: #334155; border: none; color: #fff; padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: 16px; transition: 0.3s ease;">🎤</button>
                 <button type="submit" id="sendBtn">Send ➜</button>
             </form>
         </main>
@@ -62,6 +63,7 @@
             const messages = document.getElementById("messages");
             const chatArea = document.getElementById("chatArea");
             const sendBtn = document.getElementById("sendBtn");
+            const micBtn = document.getElementById("micBtn");
             const newChatBtn = document.getElementById("newChatBtn");
             const historyList = document.getElementById("historyList");
 
@@ -71,14 +73,79 @@
             // 1. Initial Load Recent History
             renderHistoryUI();
 
-            // 2. New Chat Button Action
+            // ==========================================
+            // 🎤 2. VOICE INPUT (SPEECH TO TEXT) LOGIC
+            // ==========================================
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+            if (SpeechRecognition && micBtn) {
+                const recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US'; // Supports English and basic voice commands
+
+                let isListening = false;
+
+                micBtn.addEventListener("click", () => {
+                    if (!isListening) {
+                        try {
+                            recognition.start();
+                        } catch (err) {
+                            console.log("Speech error: ", err);
+                        }
+                    } else {
+                        recognition.stop();
+                    }
+                });
+
+                recognition.onstart = () => {
+                    isListening = true;
+                    micBtn.style.background = "#ef4444"; // Red color active recording status
+                    micBtn.textContent = "🎙️";
+                    input.placeholder = "Listening... Speak now!";
+                };
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    input.value = transcript;
+                    
+                    // Auto submit form after 500ms when voice ends
+                    setTimeout(() => {
+                        if (chatForm) {
+                            chatForm.dispatchEvent(new Event("submit"));
+                        }
+                    }, 500);
+                };
+
+                recognition.onerror = (event) => {
+                    console.error("Speech Error:", event.error);
+                    resetMicUI();
+                };
+
+                recognition.onend = () => {
+                    resetMicUI();
+                };
+
+                function resetMicUI() {
+                    isListening = false;
+                    micBtn.style.background = "#334155";
+                    micBtn.textContent = "🎤";
+                    input.placeholder = "Type or click 🎤 to speak...";
+                }
+            } else if (micBtn) {
+                micBtn.addEventListener("click", () => {
+                    alert("Voice Input is not supported in this browser. Please try Google Chrome or Safari.");
+                });
+            }
+
+            // 3. New Chat Button Action
             if (newChatBtn) {
                 newChatBtn.addEventListener("click", () => {
                     currentConversation = [];
                     messages.innerHTML = `
                         <div class="message ai-message">
                             <h2>👋 Welcome to SmartChat AI</h2>
-                            <p>Hello! Ask me anything or try: <b>"Design a logo for Toynix"</b></p>
+                            <p>Hello! Ask me anything, click 🎤 to speak, or try: <b>"Design a logo for Toynix"</b></p>
                         </div>
                     `;
                     if (input) { input.value = ""; input.focus(); }
@@ -86,7 +153,7 @@
                 });
             }
 
-            // 3. Form Submission Handling
+            // 4. Form Submission Handling
             if (chatForm) {
                 chatForm.addEventListener("submit", async (e) => {
                     e.preventDefault();
