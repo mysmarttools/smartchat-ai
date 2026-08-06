@@ -44,37 +44,84 @@ export default async function handler(req, res) {
             });
         }
 
-        // 🌐 2. WEB SEARCH CHECK
-        // Agar user latest information, news ya search ke baare me pooche
-        const searchKeywords = ["search", "latest", "news", "today", "current", "weather", "price", "who is", "what is", "score", "update"];
-        const isSearchReq = searchKeywords.some(kw => lowerMsg.includes(kw));
+       // 🌐 WEB SEARCH (Tavily)
 
-        let webSearchContext = "";
+const searchKeywords = [
+    "search",
+    "latest",
+    "news",
+    "today",
+    "current",
+    "weather",
+    "price",
+    "who is",
+    "what is",
+    "score",
+    "update"
+];
 
-        if (isSearchReq) {
-            try {
-                // Free DuckDuckGo Instant Answer Search API
-                const searchResponse = await fetch(
-                    `https://api.duckduckgo.com/?q=${encodeURIComponent(message)}&format=json&no_html=1&skip_disambig=1`
-                );
-                const searchData = await searchResponse.json();
+const isSearchReq = searchKeywords.some(k =>
+    lowerMsg.includes(k)
+);
 
-                if (searchData.AbstractText) {
-                    webSearchContext = `[Web Search Snippet]: ${searchData.AbstractText}`;
-                } else if (searchData.RelatedTopics && searchData.RelatedTopics.length > 0) {
-                    const snippets = searchData.RelatedTopics
-                        .slice(0, 3)
-                        .map(item => item.Text)
-                        .filter(Boolean)
-                        .join("\n");
-                    if (snippets) {
-                        webSearchContext = `[Web Search Context]:\n${snippets}`;
-                    }
-                }
-            } catch (err) {
-                console.log("Web search fetch failed, continuing with direct AI response:", err.message);
+let webSearchContext = "";
+
+if (isSearchReq && process.env.TAVILY_API_KEY) {
+
+    try {
+
+        const tavily = await fetch(
+            "https://api.tavily.com/search",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+
+                    api_key: process.env.TAVILY_API_KEY,
+
+                    query: message,
+
+                    search_depth: "advanced",
+
+                    max_results: 5,
+
+                    include_answer: true
+
+                })
             }
+        );
+
+        const result = await tavily.json();
+
+        if (result.answer) {
+
+            webSearchContext =
+                result.answer;
+
         }
+
+        if (result.results) {
+
+            webSearchContext += "\n\nSources:\n";
+
+            result.results.forEach(item => {
+
+                webSearchContext +=
+                    `• ${item.title}\n${item.url}\n`;
+
+            });
+
+        }
+
+    } catch (err) {
+
+        console.log(err);
+
+    }
+
+}
 
         // 💬 3. Regular Chat Response using Groq
         if (!process.env.GROQ_API_KEY) {
