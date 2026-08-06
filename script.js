@@ -71,10 +71,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 })
             });
 
+            // TEMP DEBUG: show status code + raw body on screen if not OK
+            if (!response.ok) {
+                const rawText = await response.text();
+                loading.remove();
+                addMessage(
+                    `⚠️ DEBUG: HTTP ${response.status} — ${rawText.slice(0, 300)}`,
+                    "ai"
+                );
+                return;
+            }
+
             const data = await response.json();
             loading.remove();
 
-            const answer = data.answer || "No response.";
+            const answer = data.answer || `⚠️ DEBUG: empty answer, raw: ${JSON.stringify(data).slice(0,300)}`;
             addMessage(answer, "ai");
 
             currentChat.push({
@@ -86,7 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         } catch (err) {
             loading.remove();
-            addMessage("❌ Something went wrong.", "ai");
+            addMessage("❌ DEBUG error: " + (err && err.message ? err.message : String(err)), "ai");
             console.error(err);
         }
     }
