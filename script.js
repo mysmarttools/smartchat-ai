@@ -1,180 +1,381 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-    // Elements
     const input = document.getElementById("userInput");
     const sendBtn = document.getElementById("sendBtn");
     const messages = document.getElementById("messages");
     const newChatBtn = document.getElementById("newChatBtn");
     const historyList = document.getElementById("historyList");
 
-    // Current Conversation
     let currentChat = [];
+    let isSending = false;
 
-    // Load Previous History
+
     loadHistory();
 
-    // Send Button Event (click works fine on mobile too, no touchend needed)
+
     if (sendBtn) {
         sendBtn.addEventListener("click", sendMessage);
     }
 
-    // Input Keydown Event
+
     if (input) {
         input.addEventListener("keydown", (e) => {
+
             if (e.key === "Enter" && !e.shiftKey) {
+
                 e.preventDefault();
                 sendMessage();
+
             }
+
         });
     }
 
-    // New Chat Button Event
+
+
     if (newChatBtn) {
-        const handleNewChat = () => {
+
+        newChatBtn.addEventListener("click", () => {
+
             currentChat = [];
+
             messages.innerHTML = `
                 <div class="message ai-message">
                     <h2>👋 Welcome to SmartChat AI</h2>
                     <p>Hello! Ask me anything.</p>
                 </div>
             `;
-            input.value = "";
-            input.focus();
-        };
 
-        newChatBtn.addEventListener("click", handleNewChat);
+            input.value = "";
+
+        });
+
     }
 
-    // Send Message
+
+
+
+
     async function sendMessage() {
+
+
+        if (isSending) return;
+
+
         const text = input.value.trim();
+
+
         if (!text) return;
 
-        addMessage(text, "user");
-        input.value = "";
 
-        // Hide keyboard on small screens after send
-        if (window.innerWidth < 768) {
-            input.blur();
+        isSending = true;
+
+
+        if(sendBtn){
+            sendBtn.disabled = true;
         }
 
-        const loading = addMessage("🤖 Thinking...", "ai");
+
+
+        addMessage(text, "user");
+
+
+        input.value = "";
+
+
+
+        const loading = addMessage(
+            "🤖 Thinking...",
+            "ai"
+        );
+
+
 
         try {
-            const response = await fetch("/api/chat", {
+
+
+            const response = await fetch(
+                window.location.origin + "/api/chat",
+                {
+
                 method: "POST",
+
                 headers: {
                     "Content-Type": "application/json"
                 },
+
                 body: JSON.stringify({
-                    message: text
+                    message:text
                 })
+
             });
 
-            // TEMP DEBUG: show status code + raw body on screen if not OK
-            if (!response.ok) {
-                const rawText = await response.text();
-                loading.remove();
-                addMessage(
-                    `⚠️ DEBUG: HTTP ${response.status} — ${rawText.slice(0, 300)}`,
-                    "ai"
-                );
-                return;
-            }
+
 
             const data = await response.json();
+
+
+
             loading.remove();
 
-            const answer = data.answer || `⚠️ DEBUG: empty answer, raw: ${JSON.stringify(data).slice(0,300)}`;
-            addMessage(answer, "ai");
+
+
+            if(!response.ok){
+
+                addMessage(
+                    "⚠️ " + (data.error || "API Error"),
+                    "ai"
+                );
+
+                return;
+
+            }
+
+
+
+            const answer =
+                data.answer || "No response received.";
+
+
+
+            addMessage(
+                answer,
+                "ai"
+            );
+
+
 
             currentChat.push({
-                question: text,
-                answer: answer
+
+                question:text,
+                answer:answer
+
             });
+
+
 
             saveHistory();
 
-        } catch (err) {
+
+
+        } catch(error){
+
+
             loading.remove();
-            addMessage("❌ DEBUG error: " + (err && err.message ? err.message : String(err)), "ai");
-            console.error(err);
+
+
+            addMessage(
+                "❌ Connection error. Please try again.",
+                "ai"
+            );
+
+
+            console.error(error);
+
+
         }
+        finally{
+
+
+            isSending = false;
+
+
+            if(sendBtn){
+                sendBtn.disabled = false;
+            }
+
+
+        }
+
+
+
     }
 
-    // Add Message
-    function addMessage(text, type) {
-        const div = document.createElement("div");
-        div.className = "message " + (type === "user" ? "user-message" : "ai-message");
-        div.innerHTML = `<p>${text}</p>`;
+
+
+
+
+
+    function addMessage(text,type){
+
+
+        const div =
+        document.createElement("div");
+
+
+        div.className =
+        "message " +
+        (type === "user"
+        ? "user-message"
+        : "ai-message");
+
+
+
+        div.innerHTML =
+        `<p>${text}</p>`;
+
+
 
         messages.appendChild(div);
 
-        // Mobile-Safe Auto Scroll
-        setTimeout(() => {
-            const chatArea = document.querySelector(".chat-area");
-            if (chatArea) {
-                chatArea.scrollTop = chatArea.scrollHeight;
+
+
+        setTimeout(()=>{
+
+
+            const chatArea =
+            document.querySelector(".chat-area");
+
+
+            if(chatArea){
+
+                chatArea.scrollTop =
+                chatArea.scrollHeight;
+
             }
-        }, 50);
+
+
+        },100);
+
+
 
         return div;
+
     }
 
-    // Save Current Conversation
-    function saveHistory() {
-        if (currentChat.length === 0) return;
 
-        let chats = JSON.parse(localStorage.getItem("chatHistory")) || [];
 
-        // Remove duplicate conversation
-        chats = chats.filter(chat =>
-            JSON.stringify(chat) !== JSON.stringify(currentChat)
-        );
 
-        // Add latest chat on top
+
+
+
+    function saveHistory(){
+
+
+        if(currentChat.length===0)
+            return;
+
+
+
+        let chats =
+        JSON.parse(
+            localStorage.getItem("chatHistory")
+        ) || [];
+
+
+
         chats.unshift([...currentChat]);
 
-        // Keep only last 10 chats
-        chats = chats.slice(0, 10);
 
-        localStorage.setItem("chatHistory", JSON.stringify(chats));
+
+        chats =
+        chats.slice(0,10);
+
+
+
+        localStorage.setItem(
+            "chatHistory",
+            JSON.stringify(chats)
+        );
+
+
         loadHistory();
+
+
     }
 
-    // Load Sidebar History
-    function loadHistory() {
-        if (!historyList) return;
 
-        let chats = JSON.parse(localStorage.getItem("chatHistory")) || [];
+
+
+
+
+
+    function loadHistory(){
+
+
+        if(!historyList)
+            return;
+
+
+
+        let chats =
+        JSON.parse(
+            localStorage.getItem("chatHistory")
+        ) || [];
+
+
+
         historyList.innerHTML = "";
 
-        if (chats.length === 0) {
+
+
+        if(chats.length===0){
+
             historyList.innerHTML = `
-                <li style="opacity:.6;cursor:default;">
+                <li style="opacity:.6">
                     No chats yet
                 </li>
             `;
+
             return;
+
         }
 
-        chats.forEach((chat, index) => {
-            const li = document.createElement("li");
-            li.textContent = chat[0]?.question || `Chat ${index + 1}`;
 
-            const loadSelectedChat = () => {
+
+        chats.forEach((chat,index)=>{
+
+
+            const li =
+            document.createElement("li");
+
+
+
+            li.textContent =
+            chat[0]?.question ||
+            `Chat ${index+1}`;
+
+
+
+            li.onclick = ()=>{
+
+
                 messages.innerHTML = "";
-                currentChat = [...chat];
 
-                currentChat.forEach(item => {
-                    addMessage(item.question, "user");
-                    addMessage(item.answer, "ai");
+
+                currentChat=[...chat];
+
+
+
+                currentChat.forEach(item=>{
+
+                    addMessage(
+                        item.question,
+                        "user"
+                    );
+
+
+                    addMessage(
+                        item.answer,
+                        "ai"
+                    );
+
+
                 });
+
+
             };
 
-            li.addEventListener("click", loadSelectedChat);
+
 
             historyList.appendChild(li);
+
+
         });
+
+
     }
+
+
+
 });
