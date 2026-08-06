@@ -16,7 +16,7 @@ export default async function handler(req, res) {
 
         const lowerMsg = message.toLowerCase();
 
-        // 🎨 Check for Logo/Image request
+        // 🎨 Check if user is asking for Logo or Image Generation
         const isImageRequest = 
             lowerMsg.includes("logo") || 
             lowerMsg.includes("design") || 
@@ -26,29 +26,25 @@ export default async function handler(req, res) {
             lowerMsg.startsWith("/image");
 
         if (isImageRequest) {
-            // Clean user prompt
+            // Prompt Clean-up
             let cleanPrompt = message
                 .replace(/generate|create|design|draw|a logo for|a logo|image of|picture of|\/image/gi, "")
                 .trim();
 
             if (!cleanPrompt) cleanPrompt = message;
 
-            // 🎯 Professional Vector Logo Prompt Builder
-            const professionalPrompt = `${cleanPrompt} logo design, minimalist vector logo, modern flat graphic design, clean lines, professional branding, iconic icon, simple vector artwork, sharp focus, 8k resolution, high quality, trending on Behance and Dribbble`;
+            // 💎 Ultra-Professional Graphic Design Prompt Architecture
+            const highEndPrompt = `Professional corporate vector logo for ${cleanPrompt}, minimal geometric logo mark, premium brand identity, graphic design masterpiece, crisp sharp vector lines, isolated white background, flat design, Behance spotlight award winning logo design, 8k resolution`;
 
-            // 🚫 Negative Prompts to remove noise & bad renders
-            const negativePrompt = "realistic photo, 3d render, watermark, text noise, ugly font, blurry, low resolution, distorted, extra limbs, photo, realistic background, dark shadows, noise";
+            const encodedPrompt = encodeURIComponent(highEndPrompt);
+            const randomSeed = Math.floor(Math.random() * 9999999);
 
-            const encodedPrompt = encodeURIComponent(professionalPrompt);
-            const encodedNegative = encodeURIComponent(negativePrompt);
-
-            // High resolution Pollinations URL with negative prompt parameters
-            const randomSeed = Math.floor(Math.random() * 999999);
-            const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=800&nologo=true&seed=${randomSeed}&negative=${encodedNegative}&enhance=true`;
+            // 🚀 Flux Model Integration (High Definition & Text Precision)
+            const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${randomSeed}&model=flux&enhance=true`;
 
             return res.status(200).json({
                 type: "image",
-                answer: `Here is your professional logo design for: **"${cleanPrompt}"**`,
+                answer: `Here is your high-end professional logo design for: **"${cleanPrompt}"**`,
                 imageUrl: imageUrl
             });
         }
