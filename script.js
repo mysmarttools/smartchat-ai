@@ -1,390 +1,845 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-const chatForm=document.getElementById("chatForm");
-const input=document.getElementById("userInput");
-const messages=document.getElementById("messages");
-const chatArea=document.getElementById("chatArea");
-const sendBtn=document.getElementById("sendBtn");
-const voiceBtn=document.getElementById("voiceBtn");
-const webBtn=document.getElementById("webBtn");
-const newChatBtn=document.getElementById("newChatBtn");
-const historyList=document.getElementById("historyList");
+    const chatForm = document.getElementById("chatForm");
+    const input = document.getElementById("userInput");
+    const messages = document.getElementById("messages");
+    const chatArea = document.getElementById("chatArea");
 
-let currentConversation=[];
-let allSessions=JSON.parse(localStorage.getItem("smartChatSessions"))||[];
+    const sendBtn = document.getElementById("sendBtn");
+    const voiceBtn = document.getElementById("voiceBtn");
 
-let forceWebSearch=false;
+    // IMPORTANT: HTML button ID should be webSearchBtn
+    const webSearchBtn = document.getElementById("webSearchBtn");
 
-renderHistoryUI();
+    const newChatBtn = document.getElementById("newChatBtn");
+    const historyList = document.getElementById("historyList");
 
+    let currentConversation = [];
 
-// ======================
-// WEB SEARCH BUTTON
-// ======================
+    let allSessions =
+        JSON.parse(localStorage.getItem("smartChatSessions")) || [];
 
-if(webBtn){
+    let forceWebSearch = false;
 
-webBtn.addEventListener("click",()=>{
 
-forceWebSearch=true;
+    // ==========================================
+    // INITIAL LOAD
+    // ==========================================
 
-input.focus();
+    renderHistoryUI();
 
-webBtn.classList.add("active");
 
-});
+    // ==========================================
+    // 🌐 LIVE WEB SEARCH BUTTON
+    // ==========================================
 
-}
+    if (webSearchBtn) {
 
+        webSearchBtn.addEventListener("click", () => {
 
-// ======================
-// VOICE INPUT
-// ======================
+            forceWebSearch = !forceWebSearch;
 
-if(voiceBtn){
+            if (forceWebSearch) {
 
-const SpeechRecognition=
-window.SpeechRecognition||
-window.webkitSpeechRecognition;
+                webSearchBtn.classList.add("active");
 
-if(SpeechRecognition){
+                webSearchBtn.innerHTML = "🌐 ON";
 
-const recognition=new SpeechRecognition();
+                webSearchBtn.title =
+                    "Live Web Search is ON";
 
-recognition.lang="en-US";
+            } else {
 
-recognition.interimResults=false;
+                webSearchBtn.classList.remove("active");
 
-recognition.continuous=false;
+                webSearchBtn.innerHTML = "🌐";
 
-voiceBtn.addEventListener("click",()=>{
-
-recognition.start();
-
-voiceBtn.innerHTML="🎙️";
-
-});
-
-recognition.onresult=(e)=>{
-
-input.value=e.results[0][0].transcript;
-
-voiceBtn.innerHTML="🎤";
-
-};
-
-recognition.onend=()=>{
-
-voiceBtn.innerHTML="🎤";
-
-};
-
-}else{
-
-voiceBtn.style.display="none";
-
-}
-
-}
-
-
-// ======================
-// NEW CHAT
-// ======================
-
-if(newChatBtn){
-
-newChatBtn.addEventListener("click",()=>{
-
-currentConversation=[];
-
-messages.innerHTML=`
-
-<div class="message ai-message">
-
-<h2>👋 Welcome to SmartChat AI</h2>
-
-<p>Hello! Ask me anything.</p>
-
-</div>
-
-`;
-
-});
-
-}
-
-
-// ======================
-// SEND MESSAGE
-// ======================
-
-chatForm.addEventListener("submit",async(e)=>{
-
-e.preventDefault();
-
-const text=input.value.trim();
-
-if(!text) return;
-
-addMessage(text,"user");
-
-input.value="";
-
-const aiDiv=addMessage("🤖 Thinking...","ai");
-
-sendBtn.disabled=true;
-
-try{
-
-const res=await fetch("/api/chat",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-
-message:text,
-
-webSearch:forceWebSearch
-
-})
-
-});
-
-forceWebSearch=false;
-
-webBtn.classList.remove("active");
-
-const data=await res.json();
-
-                aiDiv.innerHTML = "";
-
-                // 🖼️ IMAGE RESPONSE
-                if (data.type === "image") {
-
-                    aiDiv.innerHTML = `
-                        <p>${data.answer}</p>
-
-                        <img
-                            src="${data.imageUrl}"
-                            class="ai-image"
-                            alt="AI Image"
-                        >
-
-                        <button class="copy-btn">
-                            📋 Copy Prompt
-                        </button>
-                    `;
-
-                    aiDiv.querySelector(".copy-btn")
-                        .onclick = () => {
-
-                        navigator.clipboard.writeText(text);
-
-                        alert("Prompt Copied!");
-
-                    };
-
-                }
-
-                // 💬 TEXT RESPONSE
-                else {
-
-                    aiDiv.innerHTML = `
-                        <p>${data.answer}</p>
-
-                        <button class="copy-btn">
-                            📋 Copy
-                        </button>
-                    `;
-
-                    aiDiv.querySelector(".copy-btn")
-                        .onclick = () => {
-
-                        navigator.clipboard.writeText(
-                            data.answer
-                        );
-
-                        alert("Copied!");
-
-                    };
-
-                }
-
-                // Save Chat
-                currentConversation.push({
-
-                    question:text,
-
-                    answer:data.answer
-
-                });
-
-                saveToRecentChats();
+                webSearchBtn.title =
+                    "Live Web Search is OFF";
 
             }
 
-            else{
+        });
 
-                aiDiv.innerHTML=`
-                    <p>
-                    ⚠️ ${data.error}
-                    </p>
-                `;
+    }
 
-            }
+
+    // ==========================================
+    // 🎤 VOICE INPUT
+    // ==========================================
+
+    if (voiceBtn) {
+
+        const SpeechRecognition =
+            window.SpeechRecognition ||
+            window.webkitSpeechRecognition;
+
+        if (SpeechRecognition) {
+
+            const recognition =
+                new SpeechRecognition();
+
+            recognition.lang = "en-US";
+
+            recognition.interimResults = false;
+
+            recognition.continuous = false;
+
+
+            voiceBtn.addEventListener("click", () => {
+
+                try {
+
+                    recognition.start();
+
+                    voiceBtn.innerHTML = "🎙️";
+
+                    voiceBtn.classList.add("active");
+
+                } catch (error) {
+
+                    console.log(
+                        "Voice already running."
+                    );
+
+                }
+
+            });
+
+
+            recognition.onresult = (event) => {
+
+                const transcript =
+                    event.results[0][0].transcript;
+
+                input.value = transcript;
+
+                input.focus();
+
+            };
+
+
+            recognition.onend = () => {
+
+                voiceBtn.innerHTML = "🎤";
+
+                voiceBtn.classList.remove("active");
+
+            };
+
+
+            recognition.onerror = (event) => {
+
+                console.log(
+                    "Voice Error:",
+                    event.error
+                );
+
+                voiceBtn.innerHTML = "🎤";
+
+                voiceBtn.classList.remove("active");
+
+            };
+
+        } else {
+
+            voiceBtn.style.display = "none";
 
         }
 
-        catch(err){
+    }
 
-            aiDiv.innerHTML=`
-            <p>
 
-            ❌ ${err.message}
+    // ==========================================
+    // ➕ NEW CHAT
+    // ==========================================
 
-            </p>
+    if (newChatBtn) {
+
+        newChatBtn.addEventListener("click", () => {
+
+            currentConversation = [];
+
+            messages.innerHTML = `
+                <div class="message ai-message">
+
+                    <h2>👋 Welcome to SmartChat AI</h2>
+
+                    <p>
+                        Hello! Ask me anything.
+                    </p>
+
+                </div>
+            `;
+
+            input.value = "";
+
+            forceWebSearch = false;
+
+            if (webSearchBtn) {
+
+                webSearchBtn.classList.remove("active");
+
+                webSearchBtn.innerHTML = "🌐";
+
+                webSearchBtn.title =
+                    "Live Web Search is OFF";
+
+            }
+
+            input.focus();
+
+            if (chatArea) {
+
+                chatArea.scrollTop = 0;
+
+            }
+
+        });
+
+    }
+
+
+    // ==========================================
+    // 📩 SEND MESSAGE
+    // ==========================================
+
+    if (chatForm) {
+
+        chatForm.addEventListener(
+            "submit",
+            async (event) => {
+
+                event.preventDefault();
+
+                const text =
+                    input.value.trim();
+
+                if (!text) return;
+
+
+                // User message
+                addMessage(
+                    text,
+                    "user"
+                );
+
+
+                input.value = "";
+
+
+                // Thinking message
+                const aiDiv =
+                    addMessage(
+                        "🤖 Thinking...",
+                        "ai"
+                    );
+
+
+                if (sendBtn) {
+
+                    sendBtn.disabled = true;
+
+                }
+
+
+                try {
+
+                    const response =
+                        await fetch(
+                            "/api/chat",
+                            {
+                                method: "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json"
+                                },
+
+                                body: JSON.stringify({
+
+                                    message: text,
+
+                                    webSearch:
+                                        forceWebSearch
+
+                                })
+
+                            }
+                        );
+
+
+                    const data =
+                        await response.json();
+
+
+                    // Reset web search after request
+                    forceWebSearch = false;
+
+
+                    if (webSearchBtn) {
+
+                        webSearchBtn.classList.remove(
+                            "active"
+                        );
+
+                        webSearchBtn.innerHTML =
+                            "🌐";
+
+                        webSearchBtn.title =
+                            "Live Web Search is OFF";
+
+                    }
+
+
+                    if (!response.ok) {
+
+                        aiDiv.innerHTML = `
+                            <p>
+                                ⚠️ ${
+                                    data.error ||
+                                    "Something went wrong."
+                                }
+                            </p>
+                        `;
+
+                        return;
+
+                    }
+
+
+                    // ==========================================
+                    // IMAGE RESPONSE
+                    // ==========================================
+
+                    if (data.type === "image") {
+
+                        showImageResponse(
+                            aiDiv,
+                            data,
+                            text
+                        );
+
+                    }
+
+                    // ==========================================
+                    // TEXT RESPONSE
+                    // ==========================================
+
+                    else {
+
+                        showTextResponse(
+                            aiDiv,
+                            data
+                        );
+
+                    }
+
+
+                    // Save conversation
+                    currentConversation.push({
+
+                        question: text,
+
+                        answer:
+                            data.answer || ""
+
+                    });
+
+
+                    saveToRecentChats();
+
+                }
+
+                catch (error) {
+
+                    console.error(error);
+
+                    aiDiv.innerHTML = `
+                        <p>
+                            ❌ Connection Error.
+                            Please try again.
+                        </p>
+                    `;
+
+                }
+
+                finally {
+
+                    if (sendBtn) {
+
+                        sendBtn.disabled = false;
+
+                    }
+
+                    if (chatArea) {
+
+                        chatArea.scrollTop =
+                            chatArea.scrollHeight;
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+
+
+    // ==========================================
+    // MESSAGE FUNCTION
+    // ==========================================
+
+    function addMessage(text, type) {
+
+        const div =
+            document.createElement("div");
+
+        div.className =
+            `message ${
+                type === "user"
+                    ? "user-message"
+                    : "ai-message"
+            }`;
+
+
+        const paragraph =
+            document.createElement("p");
+
+        paragraph.textContent = text;
+
+
+        div.appendChild(paragraph);
+
+        messages.appendChild(div);
+
+
+        if (chatArea) {
+
+            chatArea.scrollTop =
+                chatArea.scrollHeight;
+
+        }
+
+
+        return div;
+
+    }
+
+
+                              // ==========================================
+    // 🖼️ IMAGE RESPONSE
+    // ==========================================
+
+    function showImageResponse(aiDiv, data, originalPrompt) {
+
+        aiDiv.innerHTML = `
+            <p>${escapeHTML(data.answer || "🎨 Image generated")}</p>
+
+            <img
+                src="${escapeHTML(data.imageUrl || "")}"
+                class="ai-image"
+                alt="AI Generated Image"
+                loading="lazy"
+            >
+
+            <div class="message-actions">
+
+                <button class="copy-btn">
+                    📋 Copy Prompt
+                </button>
+
+                <a
+                    href="${escapeHTML(data.imageUrl || "")}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="copy-btn"
+                >
+                    🔗 Open Image
+                </a>
+
+            </div>
+        `;
+
+
+        const copyBtn =
+            aiDiv.querySelector(".copy-btn");
+
+        if (copyBtn) {
+
+            copyBtn.addEventListener(
+                "click",
+                async () => {
+
+                    try {
+
+                        await navigator.clipboard.writeText(
+                            originalPrompt
+                        );
+
+                        copyBtn.textContent =
+                            "✅ Copied!";
+
+                        setTimeout(() => {
+
+                            copyBtn.textContent =
+                                "📋 Copy Prompt";
+
+                        }, 1500);
+
+                    } catch (error) {
+
+                        console.log(
+                            "Copy failed:",
+                            error
+                        );
+
+                    }
+
+                }
+            );
+
+        }
+
+    }
+
+
+    // ==========================================
+    // 💬 TEXT RESPONSE
+    // ==========================================
+
+    function showTextResponse(aiDiv, data) {
+
+        let answer =
+            data.answer ||
+            "Sorry, I couldn't generate a response.";
+
+
+        let badge = "";
+
+
+        // 🌐 Web Search Badge
+        if (data.webSearch === true) {
+
+            badge = `
+                <div class="web-badge">
+                    🌐 Live Web Search
+                </div>
             `;
 
         }
 
-        finally{
 
-            sendBtn.disabled=false;
+        aiDiv.innerHTML = `
 
-            chatArea.scrollTop=
-            chatArea.scrollHeight;
+            ${badge}
+
+            <p>${formatAnswer(answer)}</p>
+
+            <button class="copy-btn">
+                📋 Copy
+            </button>
+
+        `;
+
+
+        const copyBtn =
+            aiDiv.querySelector(".copy-btn");
+
+
+        if (copyBtn) {
+
+            copyBtn.addEventListener(
+                "click",
+                async () => {
+
+                    try {
+
+                        await navigator.clipboard.writeText(
+                            answer
+                        );
+
+                        copyBtn.textContent =
+                            "✅ Copied!";
+
+                        setTimeout(() => {
+
+                            copyBtn.textContent =
+                                "📋 Copy";
+
+                        }, 1500);
+
+                    } catch (error) {
+
+                        console.log(
+                            "Copy failed:",
+                            error
+                        );
+
+                    }
+
+                }
+            );
 
         }
 
-    });
+    }
 
 
-// ======================
-// SAVE CHAT
-// ======================
+    // ==========================================
+    // ✨ FORMAT AI ANSWER
+    // ==========================================
 
-function saveToRecentChats(){
+    function formatAnswer(text) {
 
-if(currentConversation.length===0)
-return;
-
-allSessions.unshift([...currentConversation]);
-
-allSessions=allSessions.slice(0,15);
-
-localStorage.setItem(
-
-"smartChatSessions",
-
-JSON.stringify(allSessions)
-
-);
-
-renderHistoryUI();
-
-}
+        if (!text) return "";
 
 
-// ======================
-// HISTORY
-// ======================
+        return escapeHTML(text)
+            .replace(
+                /\*\*(.*?)\*\*/g,
+                "<strong>$1</strong>"
+            )
+            .replace(
+                /\n/g,
+                "<br>"
+            );
 
-function renderHistoryUI(){
+    }
 
-historyList.innerHTML="";
 
-if(allSessions.length===0){
+    // ==========================================
+    // 🔐 BASIC HTML ESCAPE
+    // ==========================================
 
-historyList.innerHTML=`
-<li>
+    function escapeHTML(value) {
 
-No recent chats
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
 
-</li>
-`;
+    }
 
-return;
 
-}
+    // ==========================================
+    // 💾 SAVE RECENT CHAT
+    // ==========================================
 
-allSessions.forEach(session=>{
+    function saveToRecentChats() {
 
-const li=document.createElement("li");
+        if (
+            currentConversation.length === 0
+        ) {
 
-li.textContent=
-session[0].question;
+            return;
 
-li.onclick=()=>{
+        }
 
-messages.innerHTML="";
 
-currentConversation=[...session];
+        /*
+         * Agar current conversation pehle se
+         * saved hai to usko update karein.
+         */
 
-session.forEach(chat=>{
+        const firstQuestion =
+            currentConversation[0].question;
 
-addMessage(
 
-chat.question,
+        const existingIndex =
+            allSessions.findIndex(
+                session =>
+                    session &&
+                    session.length &&
+                    session[0].question ===
+                        firstQuestion
+            );
 
-"user"
 
-);
+        if (existingIndex !== -1) {
 
-addMessage(
+            allSessions[existingIndex] =
+                [...currentConversation];
 
-chat.answer,
+        } else {
 
-"ai"
+            allSessions.unshift(
+                [...currentConversation]
+            );
 
-);
+        }
+
+
+        // Maximum 15 recent chats
+        allSessions =
+            allSessions.slice(0, 15);
+
+
+        localStorage.setItem(
+            "smartChatSessions",
+            JSON.stringify(allSessions)
+        );
+
+
+        renderHistoryUI();
+
+    }
+
+
+    // ==========================================
+    // 📜 RENDER CHAT HISTORY
+    // ==========================================
+
+    function renderHistoryUI() {
+
+        if (!historyList) {
+
+            return;
+
+        }
+
+
+        historyList.innerHTML = "";
+
+
+        if (
+            allSessions.length === 0
+        ) {
+
+            const emptyItem =
+                document.createElement("li");
+
+            emptyItem.textContent =
+                "No recent chats";
+
+            emptyItem.style.opacity =
+                "0.6";
+
+            historyList.appendChild(
+                emptyItem
+            );
+
+            return;
+
+        }
+
+
+        allSessions.forEach(
+            (session) => {
+
+                if (
+                    !session ||
+                    session.length === 0
+                ) {
+
+                    return;
+
+                }
+
+
+                const li =
+                    document.createElement("li");
+
+
+                li.textContent =
+                    session[0].question;
+
+
+                li.title =
+                    session[0].question;
+
+
+                li.addEventListener(
+                    "click",
+                    () => {
+
+                        messages.innerHTML = "";
+
+                        currentConversation =
+                            [...session];
+
+
+                        session.forEach(
+                            chat => {
+
+                                addMessage(
+                                    chat.question,
+                                    "user"
+                                );
+
+
+                                addMessage(
+                                    chat.answer,
+                                    "ai"
+                                );
+
+                            }
+                        );
+
+
+                        if (chatArea) {
+
+                            chatArea.scrollTop =
+                                chatArea.scrollHeight;
+
+                        }
+
+                    }
+                );
+
+
+                historyList.appendChild(li);
+
+            }
+        );
+
+    }
+
+
+    // ==========================================
+    // ⌨️ ENTER TO SEND
+    // ==========================================
+
+    if (input) {
+
+        input.addEventListener(
+            "keydown",
+            (event) => {
+
+                if (
+                    event.key === "Enter" &&
+                    !event.shiftKey
+                ) {
+
+                    event.preventDefault();
+
+
+                    if (chatForm) {
+
+                        chatForm.requestSubmit();
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+
+
+    // ==========================================
+    // 🔄 AUTO SCROLL
+    // ==========================================
+
+    if (chatArea) {
+
+        chatArea.scrollTop =
+            chatArea.scrollHeight;
+
+    }
 
 });
-
-};
-
-historyList.appendChild(li);
-
-});
-
-}
-
-
-// ======================
-// MESSAGE
-// ======================
-
-function addMessage(text,type){
-
-const div=document.createElement("div");
-
-div.className=
-
-`message ${
-type==="user"
-?
-"user-message"
-:
-"ai-message"
-}`;
-
-div.innerHTML=`
-<p>${text}</p>
-`;
-
-messages.appendChild(div);
-
-chatArea.scrollTop=
-
-chatArea.scrollHeight;
-
-return div;
-
-}
-
-});
-    
