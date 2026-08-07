@@ -1,1043 +1,439 @@
-document.addEventListener("DOMContentLoaded", () => {
+export default async function handler(req, res) {
 
-    const chatForm =
-        document.getElementById("chatForm");
+    if (req.method !== "POST") {
+        return res.status(405).json({
+            error: "Method not allowed"
+        });
+    }
 
-    const input =
-        document.getElementById("userInput");
+    try {
 
-    const messages =
-        document.getElementById("messages");
+        let body = req.body;
 
-    const chatArea =
-        document.getElementById("chatArea");
+        if (typeof body === "string") {
+            try {
+                body = JSON.parse(body);
+            } catch (e) {}
+        }
 
-    const sendBtn =
-        document.getElementById("sendBtn");
+        const message = body?.message?.trim();
 
-    const voiceBtn =
-        document.getElementById("voiceBtn");
+        if (!message) {
+            return res.status(400).json({
+                error: "Message is required."
+            });
+        }
 
-    const webBtn =
-        document.getElementById("webSearchBtn");
+        const lowerMsg = message.toLowerCase();
 
-    const newChatBtn =
-        document.getElementById("newChatBtn");
+        /* ==========================================
+           🎨 IMAGE / LOGO GENERATOR
+        ========================================== */
 
-    const historyList =
-        document.getElementById("historyList");
+        const imageKeywords = [
+            "logo",
+            "design a logo",
+            "design logo",
+            "create a logo",
+            "make a logo",
+            "generate a logo",
+            "draw a logo",
+            "generate image",
+            "create image",
+            "make an image",
+            "draw image",
+            "picture",
+            "/image"
+        ];
+
+        const isImageRequest = imageKeywords.some(keyword =>
+            lowerMsg.includes(keyword)
+        );
+
+        if (isImageRequest) {
+
+            const cleanPrompt = message
+                .replace(
+                    /generate|create|make|design|draw|logo|image|picture|for|\/image/gi,
+                    ""
+                )
+                .trim();
+
+            const prompt = cleanPrompt || message;
+
+            const imageUrl =
+                `https://image.pollinations.ai/prompt/${encodeURIComponent(
+                    prompt +
+                    ", professional modern logo, clean vector, minimal, white background, high quality"
+                )}?width=768&height=768&seed=${Date.now()}&nologo=true`;
+
+            return res.status(200).json({
+
+                type: "image",
+
+                answer:
+                    `🎨 Creating image for "${prompt}"`,
+
+                imageUrl
+
+            });
+
+        }
 
 
-    let currentConversation = [];
+        /* ==========================================
+           🌐 LIVE WEB SEARCH
+           
+           IMPORTANT:
+           Web search ONLY runs when the 🌐 button
+           is enabled from the frontend.
+        ========================================== */
 
-    let allSessions =
-        JSON.parse(
-            localStorage.getItem("smartChatSessions")
-        ) || [];
+        const forceWebSearch =
+            body?.webSearch === true;
 
-    let forceWebSearch = false;
+        let webSearchContext = "";
 
-
-    renderHistoryUI();
-
-
-    /* ==========================================
-       🌐 WEB SEARCH BUTTON
-    ========================================== */
-
-    if (webBtn) {
-
-        webBtn.addEventListener("click", () => {
-
-            forceWebSearch = !forceWebSearch;
+        let webSearchUsed = false;
 
 
-            if (forceWebSearch) {
+        /* ==========================================
+           🔎 TAVILY SEARCH
+        ========================================== */
 
-                webBtn.classList.add("active");
+        if (forceWebSearch) {
 
-                webBtn.innerHTML = "🌐";
+            if (!process.env.TAVILY_API_KEY) {
 
-                webBtn.title =
-                    "Live Web Search ON";
+                return res.status(500).json({
 
-            } else {
+                    error:
+                        "TAVILY_API_KEY is missing."
 
-                webBtn.classList.remove("active");
-
-                webBtn.innerHTML = "🌐";
-
-                webBtn.title =
-                    "Live Web Search OFF";
+                });
 
             }
 
+            try {
 
-            if (input) {
-                input.focus();
+                const tavilyResponse =
+                    await fetch(
+                        "https://api.tavily.com/search",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body: JSON.stringify({
+
+                                api_key:
+                                    process.env.TAVILY_API_KEY,
+
+                                query:
+                                    message,
+
+                                search_depth:
+                                    "advanced",
+
+                                include_answer:
+                                    true,
+
+                                include_images:
+                                    false,
+
+                                max_results:
+                                    5
+
+                            })
+                        }
+                    );
+
+
+                const tavily =
+                    await tavilyResponse.json();
+
+
+                if (!tavilyResponse.ok) {
+
+                    return res.status(
+                        tavilyResponse.status
+                    ).json({
+
+                        error:
+                            tavily?.message ||
+                            tavily?.error ||
+                            "Tavily Search Error"
+
+                    });
+
+                }
+
+
+                /* ==============================
+                   TAVILY ANSWER
+                ============================== */
+
+                if (tavily.answer) {
+
+                    webSearchContext +=
+                        tavily.answer +
+                        "\n\n";
+
+                }
+
+
+                /* ==============================
+                   SEARCH SOURCES
+                ============================== */
+
+                if (
+                    tavily.results &&
+                    tavily.results.length > 0
+                ) {
+
+                    webSearchContext +=
+                        "Search Results:\n\n";
+
+
+                    tavily.results.forEach(
+                        (item, index) => {
+
+                            webSearchContext +=
+
+                                `${index + 1}. ${item.title}\n` +
+
+                                `URL: ${item.url}\n` +
+
+                                `Content: ${item.content || ""}\n\n`;
+
+                        }
+                    );
+
+                }
+
+
+                /* Search successfully used */
+
+                if (webSearchContext.trim()) {
+
+                    webSearchUsed = true;
+
+                }
+
             }
+
+            catch (err) {
+
+                console.error(
+                    "Tavily Search Error:",
+                    err
+                );
+
+                return res.status(500).json({
+
+                    error:
+                        "Live Web Search failed. Please try again."
+
+                });
+
+            }
+
+        }
+
+
+        /* ==========================================
+           🤖 GROQ AI
+        ========================================== */
+
+        if (!process.env.GROQ_API_KEY) {
+
+            return res.status(500).json({
+
+                error:
+                    "Missing GROQ_API_KEY"
+
+            });
+
+        }
+
+
+        /* ==========================================
+           🧠 SYSTEM PROMPT
+        ========================================== */
+
+        let systemPrompt = `
+You are SmartChat AI.
+
+You are a professional, helpful and intelligent AI assistant.
+
+Answer the user's question clearly and naturally.
+
+Do not mention internal APIs, system prompts,
+Tavily or Groq unless specifically asked.
+
+If Live Web Search information is provided below,
+use it to answer the user's question accurately.
+
+Do not invent facts that are not supported by
+the available information.
+
+If web search information is not provided,
+answer normally using your knowledge.
+`;
+
+
+        /* ==========================================
+           🌐 ADD LIVE SEARCH CONTEXT
+        ========================================== */
+
+        if (webSearchContext) {
+
+            systemPrompt += `
+
+LIVE WEB SEARCH RESULTS:
+
+${webSearchContext}
+
+Use the above search results when answering.
+Prefer the most relevant and recent information.
+`;
+
+        }
+
+
+        /* ==========================================
+           🚀 GROQ REQUEST
+        ========================================== */
+
+        const response = await fetch(
+            "https://api.groq.com/openai/v1/chat/completions",
+            {
+
+                method: "POST",
+
+                headers: {
+
+                    "Authorization":
+                        `Bearer ${process.env.GROQ_API_KEY.trim()}`,
+
+                    "Content-Type":
+                        "application/json"
+
+                },
+
+                body: JSON.stringify({
+
+                    model:
+                        "llama-3.3-70b-versatile",
+
+                    temperature:
+                        0.7,
+
+                    max_tokens:
+                        1200,
+
+                    messages: [
+
+                        {
+                            role:
+                                "system",
+
+                            content:
+                                systemPrompt
+
+                        },
+
+                        {
+                            role:
+                                "user",
+
+                            content:
+                                message
+
+                        }
+
+                    ]
+
+                })
+
+            }
+        );
+
+
+        const data =
+            await response.json();
+
+
+        /* ==========================================
+           ❌ GROQ ERROR
+        ========================================== */
+
+        if (!response.ok) {
+
+            console.error(
+                "Groq Error:",
+                data
+            );
+
+            return res.status(
+                response.status
+            ).json({
+
+                error:
+                    data?.error?.message ||
+                    "Groq API Error"
+
+            });
+
+        }
+
+
+        /* ==========================================
+           💬 AI ANSWER
+        ========================================== */
+
+        const answer =
+            data?.choices?.[0]?.message?.content ||
+            "Sorry, I couldn't generate a response.";
+
+
+        /* ==========================================
+           ✅ RESPONSE
+        ========================================== */
+
+        return res.status(200).json({
+
+            type:
+                "text",
+
+            answer:
+                answer,
+
+            webSearch:
+                webSearchUsed
 
         });
 
     }
 
+    catch (error) {
 
-    /* ==========================================
-       🎤 VOICE INPUT
-    ========================================== */
+        console.error(
+            "Chat API Error:",
+            error
+        );
 
-    if (voiceBtn) {
+        return res.status(500).json({
 
-        const SpeechRecognition =
-            window.SpeechRecognition ||
-            window.webkitSpeechRecognition;
+            error:
+                error.message ||
+                "Internal Server Error"
 
-
-        if (SpeechRecognition) {
-
-            const recognition =
-                new SpeechRecognition();
-
-
-            recognition.lang = "en-US";
-
-            recognition.interimResults = false;
-
-            recognition.continuous = false;
-
-
-            voiceBtn.addEventListener(
-                "click",
-                () => {
-
-                    try {
-
-                        recognition.start();
-
-                        voiceBtn.innerHTML =
-                            "🎙️";
-
-                    } catch (error) {
-
-                        console.log(
-                            "Voice already active"
-                        );
-
-                    }
-
-                }
-            );
-
-
-            recognition.onresult =
-                (event) => {
-
-                    const transcript =
-                        event.results[0][0]
-                            .transcript;
-
-
-                    input.value =
-                        transcript;
-
-                    input.focus();
-
-                };
-
-
-            recognition.onend =
-                () => {
-
-                    voiceBtn.innerHTML =
-                        "🎤";
-
-                };
-
-
-            recognition.onerror =
-                () => {
-
-                    voiceBtn.innerHTML =
-                        "🎤";
-
-                };
-
-        } else {
-
-            voiceBtn.style.display =
-                "none";
-
-        }
+        });
 
     }
 
-
-    /* ==========================================
-       ➕ NEW CHAT
-    ========================================== */
-
-    if (newChatBtn) {
-
-        newChatBtn.addEventListener(
-            "click",
-            () => {
-
-                currentConversation = [];
-
-
-                messages.innerHTML = `
-
-                    <div class="message ai-message">
-
-                        <h2>
-                            👋 Welcome to SmartChat AI
-                        </h2>
-
-                        <p>
-                            Hello! Ask me anything.
-                        </p>
-
-                    </div>
-
-                `;
-
-
-                if (input) {
-
-                    input.value = "";
-
-                    input.focus();
-
-                }
-
-            }
-        );
-
-    }
-
-
-    /* ==========================================
-       📩 SEND MESSAGE
-    ========================================== */
-
-    if (chatForm) {
-
-        chatForm.addEventListener(
-            "submit",
-            async (e) => {
-
-                e.preventDefault();
-
-
-                const text =
-                    input.value.trim();
-
-
-                if (!text) {
-                    return;
-                }
-
-
-                /* Show user message */
-
-                addMessage(
-                    text,
-                    "user"
-                );
-
-
-                input.value = "";
-
-
-                /* Thinking */
-
-                const aiDiv =
-                    addMessage(
-                        "🤖 Thinking...",
-                        "ai"
-                    );
-
-
-                sendBtn.disabled =
-                    true;
-
-
-                /* Save current web-search state */
-
-                const searchWasEnabled =
-                    forceWebSearch;
-
-
-                try {
-
-                    const res =
-                        await fetch(
-                            "/api/chat",
-                            {
-
-                                method: "POST",
-
-                                headers: {
-                                    "Content-Type":
-                                        "application/json"
-                                },
-
-                                body:
-                                    JSON.stringify({
-
-                                        message:
-                                            text,
-
-                                        webSearch:
-                                            searchWasEnabled
-
-                                    })
-
-                            }
-                        );
-
-
-                    const data =
-                        await res.json();
-
-
-                    /* ==================================
-                       RESET WEB SEARCH BUTTON
-                    ================================== */
-
-                    forceWebSearch =
-                        false;
-
-
-                    if (webBtn) {
-
-                        webBtn.classList
-                            .remove("active");
-
-                        webBtn.innerHTML =
-                            "🌐";
-
-                        webBtn.title =
-                            "Live Web Search OFF";
-
-                    }
-
-
-                    /* ==================================
-                       SUCCESS
-                    ================================== */
-
-                    if (res.ok) {
-
-                        aiDiv.innerHTML = "";
-
-
-                        /* ==================================
-                           🖼️ IMAGE RESPONSE
-                        ================================== */
-
-                        if (
-                            data.type ===
-                            "image"
-                        ) {
-
-                            aiDiv.innerHTML = `
-
-                                <p>
-                                    ${escapeHTML(
-                                        data.answer
-                                    )}
-                                </p>
-
-                                <img
-                                    src="${escapeHTML(
-                                        data.imageUrl
-                                    )}"
-                                    class="ai-image"
-                                    alt="AI Generated Image"
-                                    loading="lazy"
-                                >
-
-                                <button
-                                    class="copy-btn"
-                                    type="button"
-                                >
-                                    📋 Copy Prompt
-                                </button>
-
-                            `;
-
-
-                            const copyBtn =
-                                aiDiv.querySelector(
-                                    ".copy-btn"
-                                );
-
-
-                            if (copyBtn) {
-
-                                copyBtn.onclick =
-                                    async () => {
-
-                                        await copyText(text);
-
-                                        copyBtn.innerHTML =
-                                            "✅ Copied!";
-
-
-                                        setTimeout(
-                                            () => {
-
-                                                copyBtn.innerHTML =
-                                                    "📋 Copy Prompt";
-
-                                            },
-                                            1500
-                                        );
-
-                                    };
-
-                            }
-
-                        }
-
-
-                        /* ==================================
-                           💬 TEXT RESPONSE
-                        ================================== */
-
-                        else {
-
-                            const formattedAnswer =
-                                formatAIResponse(
-                                    data.answer
-                                );
-
-
-                            aiDiv.innerHTML = `
-
-                                ${
-                                    data.webSearch
-                                        ? `
-                                            <div class="web-badge">
-                                                🌐 Live Web Search
-                                            </div>
-                                          `
-                                        : ""
-                                }
-
-                                <div class="ai-content">
-                                    ${formattedAnswer}
-                                </div>
-
-                                <button
-                                    class="copy-btn"
-                                    type="button"
-                                >
-                                    📋 Copy
-                                </button>
-
-                            `;
-
-
-                            const copyBtn =
-                                aiDiv.querySelector(
-                                    ".copy-btn"
-                                );
-
-
-                            if (copyBtn) {
-
-                                copyBtn.onclick =
-                                    async () => {
-
-                                        await copyText(
-                                            data.answer
-                                        );
-
-
-                                        copyBtn.innerHTML =
-                                            "✅ Copied!";
-
-
-                                        setTimeout(
-                                            () => {
-
-                                                copyBtn.innerHTML =
-                                                    "📋 Copy";
-
-                                            },
-                                            1500
-                                        );
-
-                                    };
-
-                            }
-
-                        }
-
-
-                        /* ==================================
-                           💾 SAVE CHAT
-                        ================================== */
-
-                        currentConversation.push({
-
-                            question:
-                                text,
-
-                            answer:
-                                data.answer,
-
-                            webSearch:
-                                data.webSearch === true,
-
-                            type:
-                                data.type || "text",
-
-                            imageUrl:
-                                data.imageUrl || ""
-
-                        });
-
-
-                        saveToRecentChats();
-
-                    }
-
-
-                    /* ==================================
-                       ❌ API ERROR
-                    ================================== */
-
-                    else {
-
-                        aiDiv.innerHTML = `
-
-                            <p>
-                                ⚠️ ${
-                                    escapeHTML(
-                                        data.error ||
-                                        "API Error"
-                                    )
-                                }
-                            </p>
-
-                        `;
-
-                    }
-
-                }
-
-
-                /* ==================================
-                   ❌ CONNECTION ERROR
-                ================================== */
-
-                catch (err) {
-
-                    aiDiv.innerHTML = `
-
-                        <p>
-                            ❌ ${
-                                escapeHTML(
-                                    err.message
-                                )
-                            }
-                        </p>
-
-                    `;
-
-                }
-
-
-                finally {
-
-                    sendBtn.disabled =
-                        false;
-
-
-                    chatArea.scrollTop =
-                        chatArea.scrollHeight;
-
-                }
-
-            }
-        );
-
-    }
-
-
-    /* ==========================================
-       💾 SAVE CHAT
-    ========================================== */
-
-    function saveToRecentChats() {
-
-        if (
-            currentConversation.length === 0
-        ) {
-
-            return;
-
-        }
-
-
-        const firstQuestion =
-            currentConversation[0].question;
-
-
-        const existingIndex =
-            allSessions.findIndex(
-                session =>
-                    session &&
-                    session.length &&
-                    session[0].question ===
-                    firstQuestion
-            );
-
-
-        if (existingIndex !== -1) {
-
-            allSessions[existingIndex] =
-                [...currentConversation];
-
-        } else {
-
-            allSessions.unshift(
-                [...currentConversation]
-            );
-
-        }
-
-
-        allSessions =
-            allSessions.slice(0, 15);
-
-
-        localStorage.setItem(
-            "smartChatSessions",
-            JSON.stringify(
-                allSessions
-            )
-        );
-
-
-        renderHistoryUI();
-
-    }
-
-
-    /* ==========================================
-       📜 HISTORY
-    ========================================== */
-
-    function renderHistoryUI() {
-
-        if (!historyList) {
-            return;
-        }
-
-
-        historyList.innerHTML = "";
-
-
-        if (
-            allSessions.length === 0
-        ) {
-
-            historyList.innerHTML = `
-                <li style="opacity:.6;">
-                    No recent chats
-                </li>
-            `;
-
-            return;
-
-        }
-
-
-        allSessions.forEach(
-            (session) => {
-
-                if (
-                    !session ||
-                    session.length === 0
-                ) {
-
-                    return;
-
-                }
-
-
-                const li =
-                    document.createElement(
-                        "li"
-                    );
-
-
-                li.textContent =
-                    session[0].question;
-
-
-                li.onclick =
-                    () => {
-
-                        messages.innerHTML =
-                            "";
-
-
-                        currentConversation =
-                            [...session];
-
-
-                        session.forEach(
-                            chat => {
-
-                                addMessage(
-                                    chat.question,
-                                    "user"
-                                );
-
-
-                                addSavedAIMessage(
-                                    chat
-                                );
-
-                            }
-                        );
-
-
-                        chatArea.scrollTop =
-                            chatArea.scrollHeight;
-
-                    };
-
-
-                historyList.appendChild(
-                    li
-                );
-
-            }
-        );
-
-    }
-
-
-    /* ==========================================
-       💬 ADD MESSAGE
-    ========================================== */
-
-    function addMessage(
-        text,
-        type
-    ) {
-
-        const div =
-            document.createElement(
-                "div"
-            );
-
-
-        div.className =
-            `message ${
-                type === "user"
-                    ? "user-message"
-                    : "ai-message"
-            }`;
-
-
-        div.innerHTML = `
-            <p>
-                ${escapeHTML(text)}
-            </p>
-        `;
-
-
-        messages.appendChild(
-            div
-        );
-
-
-        chatArea.scrollTop =
-            chatArea.scrollHeight;
-
-
-        return div;
-
-    }
-
-
-    /* ==========================================
-       💬 ADD SAVED AI MESSAGE
-    ========================================== */
-
-    function addSavedAIMessage(chat) {
-
-        const div =
-            document.createElement(
-                "div"
-            );
-
-
-        div.className =
-            "message ai-message";
-
-
-        /* Saved IMAGE */
-
-        if (chat.type === "image" && chat.imageUrl) {
-
-            div.innerHTML = `
-
-                <p>
-                    ${escapeHTML(
-                        chat.answer
-                    )}
-                </p>
-
-                <img
-                    src="${escapeHTML(
-                        chat.imageUrl
-                    )}"
-                    class="ai-image"
-                    alt="AI Generated Image"
-                    loading="lazy"
-                >
-
-            `;
-
-        }
-
-
-        /* Saved TEXT */
-
-        else {
-
-            div.innerHTML = `
-
-                ${
-                    chat.webSearch
-                        ? `
-                            <div class="web-badge">
-                                🌐 Live Web Search
-                            </div>
-                          `
-                        : ""
-                }
-
-                <div class="ai-content">
-                    ${
-                        formatAIResponse(
-                            chat.answer
-                        )
-                    }
-                </div>
-
-            `;
-
-        }
-
-
-        messages.appendChild(
-            div
-        );
-
-
-        chatArea.scrollTop =
-            chatArea.scrollHeight;
-
-    }
-
-
-    /* ==========================================
-       🔗 FORMAT AI RESPONSE
-    ========================================== */
-
-    function formatAIResponse(text) {
-
-        if (!text) {
-            return "";
-        }
-
-
-        /*
-         * First escape HTML.
-         * This prevents AI response
-         * from injecting unwanted HTML.
-         */
-
-        let html =
-            escapeHTML(text);
-
-
-        /* ==================================
-           MARKDOWN LINKS
-           
-           [Toynix](https://www.toynix.pk/)
-        ================================== */
-
-        html = html.replace(
-            /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
-
-            '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
-        );
-
-
-        /* ==================================
-           BOLD
-           
-           **Toynix**
-        ================================== */
-
-        html = html.replace(
-            /\*\*(.*?)\*\*/g,
-            "<strong>$1</strong>"
-        );
-
-
-        /* ==================================
-           ITALIC
-           
-           *text*
-        ================================== */
-
-        html = html.replace(
-            /(?<!\*)\*([^*]+)\*(?!\*)/g,
-            "<em>$1</em>"
-        );
-
-
-        /* ==================================
-           NUMBERED LIST
-           
-           1. Something
-        ================================== */
-
-        html = html.replace(
-            /^(\d+)\.\s(.+)$/gm,
-
-            '<div class="ai-list-item"><strong>$1.</strong> $2</div>'
-        );
-
-
-        /* ==================================
-           BULLET LIST
-           
-           • Something
-           - Something
-        ================================== */
-
-        html = html.replace(
-            /^[•\-]\s(.+)$/gm,
-
-            '<div class="ai-list-item">• $1</div>'
-        );
-
-
-        /* ==================================
-           PLAIN URLS
-        ================================== */
-
-        html = html.replace(
-            /(?<!["'>])(https?:\/\/[^\s<]+)/g,
-
-            '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
-        );
-
-
-        /* ==================================
-           LINE BREAKS
-        ================================== */
-
-        html =
-            html.replace(
-                /\n\n/g,
-                "<br><br>"
-            );
-
-
-        html =
-            html.replace(
-                /\n/g,
-                "<br>"
-            );
-
-
-        return html;
-
-    }
-
-
-    /* ==========================================
-       🔒 ESCAPE HTML
-    ========================================== */
-
-    function escapeHTML(text) {
-
-        if (!text) {
-            return "";
-        }
-
-
-        return String(text)
-
-            .replace(
-                /&/g,
-                "&amp;"
-            )
-
-            .replace(
-                /</g,
-                "&lt;"
-            )
-
-            .replace(
-                />/g,
-                "&gt;"
-            )
-
-            .replace(
-                /"/g,
-                "&quot;"
-            )
-
-            .replace(
-                /'/g,
-                "&#039;"
-            );
-
-    }
-
-
-    /* ==========================================
-       📋 COPY
-    ========================================== */
-
-    async function copyText(text) {
-
-        try {
-
-            await navigator.clipboard
-                .writeText(
-                    text
-                );
-
-            return true;
-
-        }
-
-        catch (error) {
-
-            console.log(
-                "Copy failed:",
-                error
-            );
-
-            return false;
-
-        }
-
-    }
-
-});
+}
