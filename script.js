@@ -1,62 +1,79 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-    const chatForm = document.getElementById("chatForm");
-    const input = document.getElementById("userInput");
-    const messages = document.getElementById("messages");
-    const chatArea = document.getElementById("chatArea");
+    const chatForm =
+        document.getElementById("chatForm");
 
-    const sendBtn = document.getElementById("sendBtn");
-    const voiceBtn = document.getElementById("voiceBtn");
+    const input =
+        document.getElementById("userInput");
 
-    // IMPORTANT: HTML button ID should be webSearchBtn
-    const webSearchBtn = document.getElementById("webSearchBtn");
+    const messages =
+        document.getElementById("messages");
 
-    const newChatBtn = document.getElementById("newChatBtn");
-    const historyList = document.getElementById("historyList");
+    const chatArea =
+        document.getElementById("chatArea");
+
+    const sendBtn =
+        document.getElementById("sendBtn");
+
+    const voiceBtn =
+        document.getElementById("voiceBtn");
+
+    const webBtn =
+        document.getElementById("webSearchBtn");
+
+    const newChatBtn =
+        document.getElementById("newChatBtn");
+
+    const historyList =
+        document.getElementById("historyList");
+
 
     let currentConversation = [];
 
     let allSessions =
-        JSON.parse(localStorage.getItem("smartChatSessions")) || [];
+        JSON.parse(
+            localStorage.getItem("smartChatSessions")
+        ) || [];
 
     let forceWebSearch = false;
 
 
-    // ==========================================
-    // INITIAL LOAD
-    // ==========================================
-
     renderHistoryUI();
 
 
-    // ==========================================
-    // 🌐 LIVE WEB SEARCH BUTTON
-    // ==========================================
+    /* ==========================================
+       🌐 WEB SEARCH BUTTON
+    ========================================== */
 
-    if (webSearchBtn) {
+    if (webBtn) {
 
-        webSearchBtn.addEventListener("click", () => {
+        webBtn.addEventListener("click", () => {
 
-            forceWebSearch = !forceWebSearch;
+            forceWebSearch =
+                !forceWebSearch;
 
             if (forceWebSearch) {
 
-                webSearchBtn.classList.add("active");
+                webBtn.classList.add("active");
 
-                webSearchBtn.innerHTML = "🌐 ON";
+                webBtn.innerHTML = "🌐";
 
-                webSearchBtn.title =
-                    "Live Web Search is ON";
+                webBtn.title =
+                    "Live Web Search ON";
 
             } else {
 
-                webSearchBtn.classList.remove("active");
+                webBtn.classList.remove("active");
 
-                webSearchBtn.innerHTML = "🌐";
+                webBtn.innerHTML = "🌐";
 
-                webSearchBtn.title =
-                    "Live Web Search is OFF";
+                webBtn.title =
+                    "Live Web Search";
 
+            }
+
+            if (input) {
+                input.focus();
             }
 
         });
@@ -64,15 +81,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    // ==========================================
-    // 🎤 VOICE INPUT
-    // ==========================================
+    /* ==========================================
+       🎤 VOICE INPUT
+    ========================================== */
 
     if (voiceBtn) {
 
         const SpeechRecognition =
             window.SpeechRecognition ||
             window.webkitSpeechRecognition;
+
 
         if (SpeechRecognition) {
 
@@ -86,139 +104,135 @@ document.addEventListener("DOMContentLoaded", () => {
             recognition.continuous = false;
 
 
-            voiceBtn.addEventListener("click", () => {
+            voiceBtn.addEventListener(
+                "click",
+                () => {
 
-                try {
+                    try {
 
-                    recognition.start();
+                        recognition.start();
 
-                    voiceBtn.innerHTML = "🎙️";
+                        voiceBtn.innerHTML =
+                            "🎙️";
 
-                    voiceBtn.classList.add("active");
+                    } catch (error) {
 
-                } catch (error) {
+                        console.log(
+                            "Voice already active"
+                        );
 
-                    console.log(
-                        "Voice already running."
-                    );
+                    }
 
                 }
-
-            });
-
-
-            recognition.onresult = (event) => {
-
-                const transcript =
-                    event.results[0][0].transcript;
-
-                input.value = transcript;
-
-                input.focus();
-
-            };
+            );
 
 
-            recognition.onend = () => {
+            recognition.onresult =
+                (event) => {
 
-                voiceBtn.innerHTML = "🎤";
+                    const transcript =
+                        event.results[0][0]
+                            .transcript;
 
-                voiceBtn.classList.remove("active");
+                    input.value =
+                        transcript;
 
-            };
+                    input.focus();
+
+                };
 
 
-            recognition.onerror = (event) => {
+            recognition.onend =
+                () => {
 
-                console.log(
-                    "Voice Error:",
-                    event.error
-                );
+                    voiceBtn.innerHTML =
+                        "🎤";
 
-                voiceBtn.innerHTML = "🎤";
+                };
 
-                voiceBtn.classList.remove("active");
 
-            };
+            recognition.onerror =
+                () => {
+
+                    voiceBtn.innerHTML =
+                        "🎤";
+
+                };
 
         } else {
 
-            voiceBtn.style.display = "none";
+            voiceBtn.style.display =
+                "none";
 
         }
 
     }
 
 
-    // ==========================================
-    // ➕ NEW CHAT
-    // ==========================================
+    /* ==========================================
+       ➕ NEW CHAT
+    ========================================== */
 
     if (newChatBtn) {
 
-        newChatBtn.addEventListener("click", () => {
+        newChatBtn.addEventListener(
+            "click",
+            () => {
 
-            currentConversation = [];
+                currentConversation = [];
 
-            messages.innerHTML = `
-                <div class="message ai-message">
+                messages.innerHTML = `
 
-                    <h2>👋 Welcome to SmartChat AI</h2>
+                    <div class="message ai-message">
 
-                    <p>
-                        Hello! Ask me anything.
-                    </p>
+                        <h2>
+                            👋 Welcome to SmartChat AI
+                        </h2>
 
-                </div>
-            `;
+                        <p>
+                            Hello! Ask me anything.
+                        </p>
 
-            input.value = "";
+                    </div>
 
-            forceWebSearch = false;
+                `;
 
-            if (webSearchBtn) {
+                if (input) {
 
-                webSearchBtn.classList.remove("active");
+                    input.value = "";
 
-                webSearchBtn.innerHTML = "🌐";
+                    input.focus();
 
-                webSearchBtn.title =
-                    "Live Web Search is OFF";
-
-            }
-
-            input.focus();
-
-            if (chatArea) {
-
-                chatArea.scrollTop = 0;
+                }
 
             }
-
-        });
+        );
 
     }
 
 
-    // ==========================================
-    // 📩 SEND MESSAGE
-    // ==========================================
+    /* ==========================================
+       📩 SEND MESSAGE
+    ========================================== */
 
     if (chatForm) {
 
         chatForm.addEventListener(
             "submit",
-            async (event) => {
+            async (e) => {
 
-                event.preventDefault();
+                e.preventDefault();
+
 
                 const text =
                     input.value.trim();
 
-                if (!text) return;
+
+                if (!text) {
+                    return;
+                }
 
 
-                // User message
                 addMessage(
                     text,
                     "user"
@@ -228,7 +242,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 input.value = "";
 
 
-                // Thinking message
                 const aiDiv =
                     addMessage(
                         "🤖 Thinking...",
@@ -236,16 +249,17 @@ document.addEventListener("DOMContentLoaded", () => {
                     );
 
 
-                if (sendBtn) {
+                sendBtn.disabled =
+                    true;
 
-                    sendBtn.disabled = true;
 
-                }
+                const searchWasEnabled =
+                    forceWebSearch;
 
 
                 try {
 
-                    const response =
+                    const res =
                         await fetch(
                             "/api/chat",
                             {
@@ -256,128 +270,256 @@ document.addEventListener("DOMContentLoaded", () => {
                                         "application/json"
                                 },
 
-                                body: JSON.stringify({
+                                body:
+                                    JSON.stringify({
 
-                                    message: text,
+                                        message:
+                                            text,
 
-                                    webSearch:
-                                        forceWebSearch
+                                        webSearch:
+                                            searchWasEnabled
 
-                                })
+                                    })
 
                             }
                         );
 
 
                     const data =
-                        await response.json();
+                        await res.json();
 
 
-                    // Reset web search after request
-                    forceWebSearch = false;
+                    /* Reset web search */
 
+                    forceWebSearch =
+                        false;
 
-                    if (webSearchBtn) {
+                    if (webBtn) {
 
-                        webSearchBtn.classList.remove(
-                            "active"
-                        );
+                        webBtn.classList
+                            .remove("active");
 
-                        webSearchBtn.innerHTML =
+                        webBtn.innerHTML =
                             "🌐";
 
-                        webSearchBtn.title =
-                            "Live Web Search is OFF";
+                        webBtn.title =
+                            "Live Web Search";
 
                     }
 
 
-                    if (!response.ok) {
+                    if (res.ok) {
 
-                        aiDiv.innerHTML = `
-                            <p>
-                                ⚠️ ${
-                                    data.error ||
-                                    "Something went wrong."
+                        aiDiv.innerHTML = "";
+
+
+                        /* ==================================
+                           🖼️ IMAGE RESPONSE
+                        ================================== */
+
+                        if (
+                            data.type ===
+                            "image"
+                        ) {
+
+                            aiDiv.innerHTML = `
+
+                                <p>
+                                    ${escapeHTML(
+                                        data.answer
+                                    )}
+                                </p>
+
+                                <img
+                                    src="${data.imageUrl}"
+                                    class="ai-image"
+                                    alt="AI Generated Image"
+                                    loading="lazy"
+                                >
+
+                                <button
+                                    class="copy-btn"
+                                    type="button"
+                                >
+                                    📋 Copy Prompt
+                                </button>
+
+                            `;
+
+
+                            const copyBtn =
+                                aiDiv.querySelector(
+                                    ".copy-btn"
+                                );
+
+
+                            if (copyBtn) {
+
+                                copyBtn.onclick =
+                                    () => {
+
+                                        copyText(text);
+
+                                        copyBtn.innerHTML =
+                                            "✅ Copied!";
+
+                                        setTimeout(
+                                            () => {
+
+                                                copyBtn.innerHTML =
+                                                    "📋 Copy Prompt";
+
+                                            },
+                                            1500
+                                        );
+
+                                    };
+
+                            }
+
+                        }
+
+
+                        /* ==================================
+                           💬 TEXT RESPONSE
+                        ================================== */
+
+                        else {
+
+                            const formattedAnswer =
+                                formatAIResponse(
+                                    data.answer
+                                );
+
+
+                            aiDiv.innerHTML = `
+
+                                ${
+                                    data.webSearch
+                                        ? `
+                                            <div class="web-badge">
+                                                🌐 Live Web Search
+                                            </div>
+                                          `
+                                        : ""
                                 }
-                            </p>
-                        `;
 
-                        return;
+                                <div class="ai-content">
+                                    ${formattedAnswer}
+                                </div>
+
+                                <button
+                                    class="copy-btn"
+                                    type="button"
+                                >
+                                    📋 Copy
+                                </button>
+
+                            `;
+
+
+                            const copyBtn =
+                                aiDiv.querySelector(
+                                    ".copy-btn"
+                                );
+
+
+                            if (copyBtn) {
+
+                                copyBtn.onclick =
+                                    () => {
+
+                                        copyText(
+                                            data.answer
+                                        );
+
+                                        copyBtn.innerHTML =
+                                            "✅ Copied!";
+
+                                        setTimeout(
+                                            () => {
+
+                                                copyBtn.innerHTML =
+                                                    "📋 Copy";
+
+                                            },
+                                            1500
+                                        );
+
+                                    };
+
+                            }
+
+                        }
+
+
+                        /* ==================================
+                           SAVE CHAT
+                        ================================== */
+
+                        currentConversation.push({
+
+                            question:
+                                text,
+
+                            answer:
+                                data.answer
+
+                        });
+
+
+                        saveToRecentChats();
 
                     }
 
 
-                    // ==========================================
-                    // IMAGE RESPONSE
-                    // ==========================================
-
-                    if (data.type === "image") {
-
-                        showImageResponse(
-                            aiDiv,
-                            data,
-                            text
-                        );
-
-                    }
-
-                    // ==========================================
-                    // TEXT RESPONSE
-                    // ==========================================
+                    /* ==================================
+                       ❌ API ERROR
+                    ================================== */
 
                     else {
 
-                        showTextResponse(
-                            aiDiv,
-                            data
-                        );
+                        aiDiv.innerHTML = `
+
+                            <p>
+                                ⚠️ ${
+                                    escapeHTML(
+                                        data.error ||
+                                        "API Error"
+                                    )
+                                }
+                            </p>
+
+                        `;
 
                     }
 
-
-                    // Save conversation
-                    currentConversation.push({
-
-                        question: text,
-
-                        answer:
-                            data.answer || ""
-
-                    });
-
-
-                    saveToRecentChats();
-
                 }
 
-                catch (error) {
-
-                    console.error(error);
+                catch (err) {
 
                     aiDiv.innerHTML = `
+
                         <p>
-                            ❌ Connection Error.
-                            Please try again.
+                            ❌ ${
+                                escapeHTML(
+                                    err.message
+                                )
+                            }
                         </p>
+
                     `;
 
                 }
 
+
                 finally {
 
-                    if (sendBtn) {
+                    sendBtn.disabled =
+                        false;
 
-                        sendBtn.disabled = false;
-
-                    }
-
-                    if (chatArea) {
-
-                        chatArea.scrollTop =
-                            chatArea.scrollHeight;
-
-                    }
+                    chatArea.scrollTop =
+                        chatArea.scrollHeight;
 
                 }
 
@@ -387,247 +529,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    // ==========================================
-    // MESSAGE FUNCTION
-    // ==========================================
-
-    function addMessage(text, type) {
-
-        const div =
-            document.createElement("div");
-
-        div.className =
-            `message ${
-                type === "user"
-                    ? "user-message"
-                    : "ai-message"
-            }`;
-
-
-        const paragraph =
-            document.createElement("p");
-
-        paragraph.textContent = text;
-
-
-        div.appendChild(paragraph);
-
-        messages.appendChild(div);
-
-
-        if (chatArea) {
-
-            chatArea.scrollTop =
-                chatArea.scrollHeight;
-
-        }
-
-
-        return div;
-
-    }
-
-
-                              // ==========================================
-    // 🖼️ IMAGE RESPONSE
-    // ==========================================
-
-    function showImageResponse(aiDiv, data, originalPrompt) {
-
-        aiDiv.innerHTML = `
-            <p>${escapeHTML(data.answer || "🎨 Image generated")}</p>
-
-            <img
-                src="${escapeHTML(data.imageUrl || "")}"
-                class="ai-image"
-                alt="AI Generated Image"
-                loading="lazy"
-            >
-
-            <div class="message-actions">
-
-                <button class="copy-btn">
-                    📋 Copy Prompt
-                </button>
-
-                <a
-                    href="${escapeHTML(data.imageUrl || "")}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="copy-btn"
-                >
-                    🔗 Open Image
-                </a>
-
-            </div>
-        `;
-
-
-        const copyBtn =
-            aiDiv.querySelector(".copy-btn");
-
-        if (copyBtn) {
-
-            copyBtn.addEventListener(
-                "click",
-                async () => {
-
-                    try {
-
-                        await navigator.clipboard.writeText(
-                            originalPrompt
-                        );
-
-                        copyBtn.textContent =
-                            "✅ Copied!";
-
-                        setTimeout(() => {
-
-                            copyBtn.textContent =
-                                "📋 Copy Prompt";
-
-                        }, 1500);
-
-                    } catch (error) {
-
-                        console.log(
-                            "Copy failed:",
-                            error
-                        );
-
-                    }
-
-                }
-            );
-
-        }
-
-    }
-
-
-    // ==========================================
-    // 💬 TEXT RESPONSE
-    // ==========================================
-
-    function showTextResponse(aiDiv, data) {
-
-        let answer =
-            data.answer ||
-            "Sorry, I couldn't generate a response.";
-
-
-        let badge = "";
-
-
-        // 🌐 Web Search Badge
-        if (data.webSearch === true) {
-
-            badge = `
-                <div class="web-badge">
-                    🌐 Live Web Search
-                </div>
-            `;
-
-        }
-
-
-        aiDiv.innerHTML = `
-
-            ${badge}
-
-            <p>${formatAnswer(answer)}</p>
-
-            <button class="copy-btn">
-                📋 Copy
-            </button>
-
-        `;
-
-
-        const copyBtn =
-            aiDiv.querySelector(".copy-btn");
-
-
-        if (copyBtn) {
-
-            copyBtn.addEventListener(
-                "click",
-                async () => {
-
-                    try {
-
-                        await navigator.clipboard.writeText(
-                            answer
-                        );
-
-                        copyBtn.textContent =
-                            "✅ Copied!";
-
-                        setTimeout(() => {
-
-                            copyBtn.textContent =
-                                "📋 Copy";
-
-                        }, 1500);
-
-                    } catch (error) {
-
-                        console.log(
-                            "Copy failed:",
-                            error
-                        );
-
-                    }
-
-                }
-            );
-
-        }
-
-    }
-
-
-    // ==========================================
-    // ✨ FORMAT AI ANSWER
-    // ==========================================
-
-    function formatAnswer(text) {
-
-        if (!text) return "";
-
-
-        return escapeHTML(text)
-            .replace(
-                /\*\*(.*?)\*\*/g,
-                "<strong>$1</strong>"
-            )
-            .replace(
-                /\n/g,
-                "<br>"
-            );
-
-    }
-
-
-    // ==========================================
-    // 🔐 BASIC HTML ESCAPE
-    // ==========================================
-
-    function escapeHTML(value) {
-
-        return String(value)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-
-    }
-
-
-    // ==========================================
-    // 💾 SAVE RECENT CHAT
-    // ==========================================
+    /* ==========================================
+       💾 SAVE CHAT
+    ========================================== */
 
     function saveToRecentChats() {
 
@@ -640,11 +544,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
-        /*
-         * Agar current conversation pehle se
-         * saved hai to usko update karein.
-         */
-
         const firstQuestion =
             currentConversation[0].question;
 
@@ -655,7 +554,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     session &&
                     session.length &&
                     session[0].question ===
-                        firstQuestion
+                    firstQuestion
             );
 
 
@@ -673,14 +572,15 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
-        // Maximum 15 recent chats
         allSessions =
             allSessions.slice(0, 15);
 
 
         localStorage.setItem(
             "smartChatSessions",
-            JSON.stringify(allSessions)
+            JSON.stringify(
+                allSessions
+            )
         );
 
 
@@ -689,16 +589,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    // ==========================================
-    // 📜 RENDER CHAT HISTORY
-    // ==========================================
+    /* ==========================================
+       📜 HISTORY
+    ========================================== */
 
     function renderHistoryUI() {
 
         if (!historyList) {
-
             return;
-
         }
 
 
@@ -709,18 +607,11 @@ document.addEventListener("DOMContentLoaded", () => {
             allSessions.length === 0
         ) {
 
-            const emptyItem =
-                document.createElement("li");
-
-            emptyItem.textContent =
-                "No recent chats";
-
-            emptyItem.style.opacity =
-                "0.6";
-
-            historyList.appendChild(
-                emptyItem
-            );
+            historyList.innerHTML = `
+                <li style="opacity:.6;">
+                    No recent chats
+                </li>
+            `;
 
             return;
 
@@ -741,22 +632,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
                 const li =
-                    document.createElement("li");
+                    document.createElement(
+                        "li"
+                    );
 
 
                 li.textContent =
                     session[0].question;
 
 
-                li.title =
-                    session[0].question;
-
-
-                li.addEventListener(
-                    "click",
+                li.onclick =
                     () => {
 
-                        messages.innerHTML = "";
+                        messages.innerHTML =
+                            "";
 
                         currentConversation =
                             [...session];
@@ -779,66 +668,197 @@ document.addEventListener("DOMContentLoaded", () => {
                             }
                         );
 
+                    };
 
-                        if (chatArea) {
 
-                            chatArea.scrollTop =
-                                chatArea.scrollHeight;
-
-                        }
-
-                    }
+                historyList.appendChild(
+                    li
                 );
 
-
-                historyList.appendChild(li);
-
             }
         );
 
     }
 
 
-    // ==========================================
-    // ⌨️ ENTER TO SEND
-    // ==========================================
+    /* ==========================================
+       💬 ADD MESSAGE
+    ========================================== */
 
-    if (input) {
+    function addMessage(
+        text,
+        type
+    ) {
 
-        input.addEventListener(
-            "keydown",
-            (event) => {
-
-                if (
-                    event.key === "Enter" &&
-                    !event.shiftKey
-                ) {
-
-                    event.preventDefault();
+        const div =
+            document.createElement(
+                "div"
+            );
 
 
-                    if (chatForm) {
+        div.className =
+            `message ${
+                type === "user"
+                    ? "user-message"
+                    : "ai-message"
+            }`;
 
-                        chatForm.requestSubmit();
 
-                    }
+        if (type === "ai") {
 
-                }
+            div.innerHTML = `
+                <p>
+                    ${escapeHTML(text)}
+                </p>
+            `;
 
-            }
+        } else {
+
+            div.innerHTML = `
+                <p>
+                    ${escapeHTML(text)}
+                </p>
+            `;
+
+        }
+
+
+        messages.appendChild(
+            div
         );
 
-    }
-
-
-    // ==========================================
-    // 🔄 AUTO SCROLL
-    // ==========================================
-
-    if (chatArea) {
 
         chatArea.scrollTop =
             chatArea.scrollHeight;
+
+
+        return div;
+
+    }
+
+
+    /* ==========================================
+       🔗 FORMAT AI RESPONSE
+    ========================================== */
+
+    function formatAIResponse(text) {
+
+        if (!text) {
+            return "";
+        }
+
+
+        let html =
+            escapeHTML(text);
+
+
+        /* Markdown links */
+
+        html = html.replace(
+            /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+            '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
+        );
+
+
+        /* Bold */
+
+        html = html.replace(
+            /\*\*(.*?)\*\*/g,
+            "<strong>$1</strong>"
+        );
+
+
+        /* Italic */
+
+        html = html.replace(
+            /(?<!\*)\*([^*]+)\*(?!\*)/g,
+            "<em>$1</em>"
+        );
+
+
+        /* URLs */
+
+        html = html.replace(
+            /(?<!["'>])(https?:\/\/[^\s<]+)/g,
+            '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+        );
+
+
+        /* Line breaks */
+
+        html =
+            html.replace(
+                /\n\n/g,
+                "<br><br>"
+            );
+
+
+        html =
+            html.replace(
+                /\n/g,
+                "<br>"
+            );
+
+
+        return html;
+
+    }
+
+
+    /* ==========================================
+       🔒 ESCAPE HTML
+    ========================================== */
+
+    function escapeHTML(text) {
+
+        if (!text) {
+            return "";
+        }
+
+
+        return String(text)
+            .replace(/&/g, "&amp;")
+            .replace(
+                /</g,
+                "&lt;"
+            )
+            .replace(
+                />/g,
+                "&gt;"
+            )
+            .replace(
+                /"/g,
+                "&quot;"
+            )
+            .replace(
+                /'/g,
+                "&#039;"
+            );
+
+    }
+
+
+    /* ==========================================
+       📋 COPY
+    ========================================== */
+
+    async function copyText(text) {
+
+        try {
+
+            await navigator.clipboard
+                .writeText(text);
+
+        }
+
+        catch (error) {
+
+            console.log(
+                "Copy failed:",
+                error
+            );
+
+        }
 
     }
 
