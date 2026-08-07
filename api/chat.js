@@ -315,19 +315,8 @@ ${webSearchContext}
 
             "Sorry, I couldn't generate a response.";
 
-        // Add badge if Web Search was used
-
-        if (isSearchReq) {
-
-            answer += `
-
-━━━━━━━━━━━━━━━━━━━━━━
-
-🌐 Live Web Search Enabled
-
-`;
-
-        }
+        
+        
 
         return res.status(200).json({
 
