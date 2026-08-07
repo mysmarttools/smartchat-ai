@@ -1,292 +1,219 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AISmartChat – Best Free AI Chat Assistant</title>
-    <meta name="description" content="AISmartChat is a free AI chat assistant.">
-    <meta name="keywords" content="AI Chat, AI Chatbot, ChatGPT Alternative, Free AI Chat, AI Assistant, Online AI Chat, Smart AI Chat, AI Writing Assistant, Coding AI, AISmartChat">
-    <link rel="canonical" href="https://aismartchat.vercel.app/">
-    <link rel="stylesheet" href="style.css">
-    <meta name="google-site-verification" content="WRGpDVpImF-0j7W4-R46kCK4xEcN7Ti1sP1Z_BGMXEs" />
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>SmartChat AI - AI Assistant</title>
+
+    <meta
+        name="description"
+        content="Ask anything with SmartChat AI. Fast, smart and free AI assistant."
+    >
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
 </head>
+
 <body>
 
-    <!-- Header -->
+    <!-- =========================
+         HEADER
+    ========================== -->
+
     <header class="header">
-        <div class="logo">🤖 SmartChat AI</div>
-        <button class="theme-btn">🌙</button>
+
+        <div class="logo">
+            🤖 SmartChat AI
+        </div>
+
+        <button
+            class="theme-btn"
+            type="button"
+            title="Theme"
+        >
+            🌙
+        </button>
+
     </header>
 
-    <!-- Main Container -->
+
+    <!-- =========================
+         MAIN CONTAINER
+    ========================== -->
+
     <div class="container">
 
-        <!-- Sidebar -->
+
+        <!-- =========================
+             SIDEBAR
+        ========================== -->
+
         <aside class="sidebar">
-            <button class="new-chat-btn" id="newChatBtn">➕ New Chat</button>
+
+            <button
+                class="new-chat-btn"
+                id="newChatBtn"
+                type="button"
+            >
+                ➕ New Chat
+            </button>
+
+
             <div class="chat-history">
-                <h3>Recent Chats</h3>
-                <ul id="historyList"></ul>
+
+                <h3>
+                    Recent Chats
+                </h3>
+
+                <ul id="historyList">
+                </ul>
+
             </div>
+
         </aside>
 
-        <!-- Main Workspace -->
+
+        <!-- =========================
+             MAIN WORKSPACE
+        ========================== -->
+
         <main class="main-workspace">
-            <div class="chat-area" id="chatArea">
-                <div class="messages" id="messages">
+
+
+            <!-- CHAT AREA -->
+
+            <div
+                class="chat-area"
+                id="chatArea"
+            >
+
+                <div
+                    class="messages"
+                    id="messages"
+                >
+
                     <div class="message ai-message">
-                        <h2>👋 Welcome to SmartChat AI</h2>
-                        <p>Hello! Ask me anything...</p>
+
+                        <h2>
+                            👋 Welcome to SmartChat AI
+                        </h2>
+
+                        <p>
+                            Hello! Ask me anything.
+                        </p>
+
                     </div>
+
                 </div>
+
             </div>
 
-            <!-- Mobile & Desktop Form Input with Voice Mic Button -->
-            <form class="input-area" id="chatForm" onsubmit="return false;" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #1e293b; border-radius: 10px;">
-                <input type="text" id="userInput" placeholder="Type or click 🎤 to speak..." autocomplete="off" style="flex: 1; min-width: 0; padding: 10px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #fff;" />
-                
-                <!-- Voice Mic Button (Guaranteed Visible) -->
-                <button type="button" id="micBtn" title="Voice Input" style="background: #2563eb; color: #ffffff; border: none; padding: 10px 14px; border-radius: 6px; cursor: pointer; font-size: 18px; display: inline-flex; align-items: center; justify-content: center; min-width: 44px; height: 40px; z-index: 10;">🎤</button>
-                
-                <button type="submit" id="sendBtn" style="padding: 10px 16px; height: 40px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer;">Send ➜</button>
-            </form>
+
+            <!-- =========================
+                 INPUT AREA
+            ========================== -->
+
+            <div class="input-area">
+
+                <form
+                    id="chatForm"
+                    class="chat-form"
+                >
+
+
+                    <!-- MESSAGE INPUT -->
+
+                    <textarea
+                        id="userInput"
+                        name="message"
+                        placeholder="Type your message..."
+                        rows="1"
+                        autocomplete="off"
+                    ></textarea>
+
+
+                    <!-- BUTTONS -->
+
+                    <div class="input-buttons">
+
+
+                        <!-- 🎤 VOICE -->
+
+                        <button
+                            type="button"
+                            id="voiceBtn"
+                            class="icon-btn"
+                            title="Voice Input"
+                            aria-label="Voice Input"
+                        >
+                            🎤
+                        </button>
+
+
+                        <!-- 🌐 WEB SEARCH -->
+
+                        <button
+                            type="button"
+                            id="webSearchBtn"
+                            class="icon-btn web-btn"
+                            title="Live Web Search"
+                            aria-label="Live Web Search"
+                        >
+                            🌐
+                        </button>
+
+
+                        <!-- SEND -->
+
+                        <button
+                            type="submit"
+                            id="sendBtn"
+                            class="send-btn"
+                        >
+                            Send ➜
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
         </main>
 
     </div>
 
+
+    <!-- =========================
+         FOOTER
+    ========================== -->
+
     <footer>
-        <p>© 2026 SmartChat AI. All Rights Reserved.</p>
+
+        <p>
+            © 2026 SmartChat AI. All Rights Reserved.
+        </p>
+
     </footer>
 
-    <!-- All-In-One Main Script -->
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const chatForm = document.getElementById("chatForm");
-            const input = document.getElementById("userInput");
-            const messages = document.getElementById("messages");
-            const chatArea = document.getElementById("chatArea");
-            const sendBtn = document.getElementById("sendBtn");
-            const micBtn = document.getElementById("micBtn");
-            const newChatBtn = document.getElementById("newChatBtn");
-            const historyList = document.getElementById("historyList");
 
-            let currentConversation = [];
-            let allSessions = JSON.parse(localStorage.getItem("smartChatSessions")) || [];
+    <!-- =========================
+         JAVASCRIPT
+    ========================== -->
 
-            // 1. Initial Load Recent History
-            renderHistoryUI();
+    <script
+        src="script.js"
+        defer
+    ></script>
 
-            // ==========================================
-            // 🎤 2. VOICE INPUT (SPEECH TO TEXT) LOGIC
-            // ==========================================
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-            if (SpeechRecognition && micBtn) {
-                const recognition = new SpeechRecognition();
-                recognition.continuous = false;
-                recognition.interimResults = false;
-                recognition.lang = 'en-US'; // English + Basic Urdu/Hindi support
-
-                let isListening = false;
-
-                micBtn.addEventListener("click", () => {
-                    if (!isListening) {
-                        try {
-                            recognition.start();
-                        } catch (err) {
-                            console.log("Speech error: ", err);
-                        }
-                    } else {
-                        recognition.stop();
-                    }
-                });
-
-                recognition.onstart = () => {
-                    isListening = true;
-                    micBtn.style.background = "#ef4444"; // Red color active recording status
-                    micBtn.textContent = "🎙️";
-                    input.placeholder = "Listening... Speak now!";
-                };
-
-                recognition.onresult = (event) => {
-                    const transcript = event.results[0][0].transcript;
-                    input.value = transcript;
-                    
-                    // Auto submit form after 500ms when voice ends
-                    setTimeout(() => {
-                        if (chatForm) {
-                            chatForm.dispatchEvent(new Event("submit"));
-                        }
-                    }, 500);
-                };
-
-                recognition.onerror = (event) => {
-                    console.error("Speech Error:", event.error);
-                    resetMicUI();
-                };
-
-                recognition.onend = () => {
-                    resetMicUI();
-                };
-
-                function resetMicUI() {
-                    isListening = false;
-                    micBtn.style.background = "#2563eb";
-                    micBtn.textContent = "🎤";
-                    input.placeholder = "Type or click 🎤 to speak...";
-                }
-            } else if (micBtn) {
-                micBtn.addEventListener("click", () => {
-                    alert("Voice Input is not supported in this browser. Please try Google Chrome or Safari.");
-                });
-            }
-
-            // 3. New Chat Button Action
-            if (newChatBtn) {
-                newChatBtn.addEventListener("click", () => {
-                    currentConversation = [];
-                    messages.innerHTML = `
-                        <div class="message ai-message">
-                            <h2>👋 Welcome to SmartChat AI</h2>
-                            <p>Hello! Ask me anything...</p>
-                        </div>
-                    `;
-                    if (input) { input.value = ""; input.focus(); }
-                    if (chatArea) chatArea.scrollTop = 0;
-                });
-            }
-
-            // 4. Form Submission Handling
-            if (chatForm) {
-                chatForm.addEventListener("submit", async (e) => {
-                    e.preventDefault();
-                    
-                    const text = input.value.trim();
-                    if (!text) return;
-
-                    // Display User Message
-                    addMessageToDOM(text, "user");
-                    input.value = "";
-                    if (window.innerWidth <= 768) input.blur();
-
-                    // Display AI Thinking Message
-                    const aiDiv = addMessageToDOM("🤖 Thinking...", "ai");
-                    if (sendBtn) sendBtn.disabled = true;
-
-                    try {
-                        const res = await fetch("/api/chat", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ message: text })
-                        });
-
-                        const data = await res.json();
-
-                        if (res.ok) {
-                            if (data.type === "image" && data.imageUrl) {
-                                // 🎨 Render Image Response
-                                aiDiv.innerHTML = `
-                                    <p>${data.answer}</p>
-                                    <div style="margin-top: 10px;">
-                                        <img src="${data.imageUrl}" alt="AI Logo" style="width: 100%; max-width: 320px; border-radius: 12px; border: 1px solid #334155; display: block; margin-bottom: 8px;" />
-                                        <a href="${data.imageUrl}" target="_blank" download="smartchat-logo.png" style="display: inline-block; padding: 6px 14px; background: #2563eb; color: #fff; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 600;">📥 Download Logo</a>
-                                    </div>
-                                `;
-                                currentConversation.push({ question: text, answer: "[Generated Logo Image]", imageUrl: data.imageUrl, type: "image", promptTitle: data.answer });
-                            } else {
-                                // 💬 Render Text Response
-                                const answerText = data.answer || "No response";
-                                aiDiv.innerHTML = `<p>${answerText}</p>`;
-                                currentConversation.push({ question: text, answer: answerText, type: "text" });
-                            }
-
-                            // Save to Recent Chats
-                            saveToRecentChats();
-                        } else {
-                            aiDiv.innerHTML = `<p>⚠️ ${data.error || "API Error"}</p>`;
-                        }
-                    } catch (err) {
-                        aiDiv.innerHTML = `<p>❌ Connection Error: ${err.message}</p>`;
-                    } finally {
-                        if (sendBtn) sendBtn.disabled = false;
-                        if (chatArea) chatArea.scrollTop = chatArea.scrollHeight;
-                    }
-                });
-            }
-
-            // Helper to add message elements
-            function addMessageToDOM(text, type) {
-                const div = document.createElement("div");
-                div.className = `message ${type === "user" ? "user-message" : "ai-message"}`;
-                div.innerHTML = `<p>${text}</p>`;
-                messages.appendChild(div);
-                if (chatArea) chatArea.scrollTop = chatArea.scrollHeight;
-                return div;
-            }
-
-            // Save Active Chat to LocalStorage
-            function saveToRecentChats() {
-                if (currentConversation.length === 0) return;
-                
-                let existingIndex = allSessions.findIndex(session => 
-                    session.length > 0 && session[0].question === currentConversation[0].question
-                );
-
-                if (existingIndex !== -1) {
-                    allSessions[existingIndex] = [...currentConversation];
-                } else {
-                    allSessions.unshift([...currentConversation]);
-                }
-
-                allSessions = allSessions.slice(0, 15);
-                localStorage.setItem("smartChatSessions", JSON.stringify(allSessions));
-                renderHistoryUI();
-            }
-
-            // Render History List in Sidebar
-            function renderHistoryUI() {
-                if (!historyList) return;
-                historyList.innerHTML = "";
-
-                if (allSessions.length === 0) {
-                    historyList.innerHTML = `<li style="opacity:.6; font-size: 13px;">No recent chats</li>`;
-                    return;
-                }
-
-                allSessions.forEach((session) => {
-                    if (!session || session.length === 0) return;
-
-                    const li = document.createElement("li");
-                    li.textContent = session[0].question;
-
-                    li.onclick = () => {
-                        messages.innerHTML = "";
-                        currentConversation = [...session];
-                        currentConversation.forEach(item => {
-                            addMessageToDOM(item.question, "user");
-                            
-                            if (item.type === "image" && item.imageUrl) {
-                                const aiDiv = document.createElement("div");
-                                aiDiv.className = "message ai-message";
-                                aiDiv.innerHTML = `
-                                    <p>${item.promptTitle || "Generated Image"}</p>
-                                    <div style="margin-top: 10px;">
-                                        <img src="${item.imageUrl}" alt="AI Logo" style="width: 100%; max-width: 320px; border-radius: 12px; border: 1px solid #334155; display: block; margin-bottom: 8px;" />
-                                        <a href="${item.imageUrl}" target="_blank" download="smartchat-logo.png" style="display: inline-block; padding: 6px 14px; background: #2563eb; color: #fff; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 600;">📥 Download Logo</a>
-                                    </div>
-                                `;
-                                messages.appendChild(aiDiv);
-                            } else {
-                                addMessageToDOM(item.answer, "ai");
-                            }
-                        });
-                        if (chatArea) chatArea.scrollTop = chatArea.scrollHeight;
-                    };
-
-                    historyList.appendChild(li);
-                });
-            }
-        });
-    </script>
 </body>
+
 </html>
