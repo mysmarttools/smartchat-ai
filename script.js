@@ -49,8 +49,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         webBtn.addEventListener("click", () => {
 
-            forceWebSearch =
-                !forceWebSearch;
+            forceWebSearch = !forceWebSearch;
+
 
             if (forceWebSearch) {
 
@@ -68,9 +68,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 webBtn.innerHTML = "🌐";
 
                 webBtn.title =
-                    "Live Web Search";
+                    "Live Web Search OFF";
 
             }
+
 
             if (input) {
                 input.focus();
@@ -96,6 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const recognition =
                 new SpeechRecognition();
+
 
             recognition.lang = "en-US";
 
@@ -133,6 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     const transcript =
                         event.results[0][0]
                             .transcript;
+
 
                     input.value =
                         transcript;
@@ -181,6 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 currentConversation = [];
 
+
                 messages.innerHTML = `
 
                     <div class="message ai-message">
@@ -196,6 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
 
                 `;
+
 
                 if (input) {
 
@@ -233,6 +238,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
 
+                /* Show user message */
+
                 addMessage(
                     text,
                     "user"
@@ -241,6 +248,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 input.value = "";
 
+
+                /* Thinking */
 
                 const aiDiv =
                     addMessage(
@@ -253,6 +262,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     true;
 
 
+                /* Save current web-search state */
+
                 const searchWasEnabled =
                     forceWebSearch;
 
@@ -263,6 +274,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         await fetch(
                             "/api/chat",
                             {
+
                                 method: "POST",
 
                                 headers: {
@@ -289,10 +301,13 @@ document.addEventListener("DOMContentLoaded", () => {
                         await res.json();
 
 
-                    /* Reset web search */
+                    /* ==================================
+                       RESET WEB SEARCH BUTTON
+                    ================================== */
 
                     forceWebSearch =
                         false;
+
 
                     if (webBtn) {
 
@@ -303,10 +318,14 @@ document.addEventListener("DOMContentLoaded", () => {
                             "🌐";
 
                         webBtn.title =
-                            "Live Web Search";
+                            "Live Web Search OFF";
 
                     }
 
+
+                    /* ==================================
+                       SUCCESS
+                    ================================== */
 
                     if (res.ok) {
 
@@ -331,7 +350,9 @@ document.addEventListener("DOMContentLoaded", () => {
                                 </p>
 
                                 <img
-                                    src="${data.imageUrl}"
+                                    src="${escapeHTML(
+                                        data.imageUrl
+                                    )}"
                                     class="ai-image"
                                     alt="AI Generated Image"
                                     loading="lazy"
@@ -356,12 +377,13 @@ document.addEventListener("DOMContentLoaded", () => {
                             if (copyBtn) {
 
                                 copyBtn.onclick =
-                                    () => {
+                                    async () => {
 
-                                        copyText(text);
+                                        await copyText(text);
 
                                         copyBtn.innerHTML =
                                             "✅ Copied!";
+
 
                                         setTimeout(
                                             () => {
@@ -427,14 +449,16 @@ document.addEventListener("DOMContentLoaded", () => {
                             if (copyBtn) {
 
                                 copyBtn.onclick =
-                                    () => {
+                                    async () => {
 
-                                        copyText(
+                                        await copyText(
                                             data.answer
                                         );
 
+
                                         copyBtn.innerHTML =
                                             "✅ Copied!";
+
 
                                         setTimeout(
                                             () => {
@@ -454,7 +478,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
                         /* ==================================
-                           SAVE CHAT
+                           💾 SAVE CHAT
                         ================================== */
 
                         currentConversation.push({
@@ -463,7 +487,16 @@ document.addEventListener("DOMContentLoaded", () => {
                                 text,
 
                             answer:
-                                data.answer
+                                data.answer,
+
+                            webSearch:
+                                data.webSearch === true,
+
+                            type:
+                                data.type || "text",
+
+                            imageUrl:
+                                data.imageUrl || ""
 
                         });
 
@@ -496,6 +529,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 }
 
+
+                /* ==================================
+                   ❌ CONNECTION ERROR
+                ================================== */
+
                 catch (err) {
 
                     aiDiv.innerHTML = `
@@ -517,6 +555,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     sendBtn.disabled =
                         false;
+
 
                     chatArea.scrollTop =
                         chatArea.scrollHeight;
@@ -647,6 +686,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         messages.innerHTML =
                             "";
 
+
                         currentConversation =
                             [...session];
 
@@ -660,13 +700,16 @@ document.addEventListener("DOMContentLoaded", () => {
                                 );
 
 
-                                addMessage(
-                                    chat.answer,
-                                    "ai"
+                                addSavedAIMessage(
+                                    chat
                                 );
 
                             }
                         );
+
+
+                        chatArea.scrollTop =
+                            chatArea.scrollHeight;
 
                     };
 
@@ -704,23 +747,11 @@ document.addEventListener("DOMContentLoaded", () => {
             }`;
 
 
-        if (type === "ai") {
-
-            div.innerHTML = `
-                <p>
-                    ${escapeHTML(text)}
-                </p>
-            `;
-
-        } else {
-
-            div.innerHTML = `
-                <p>
-                    ${escapeHTML(text)}
-                </p>
-            `;
-
-        }
+        div.innerHTML = `
+            <p>
+                ${escapeHTML(text)}
+            </p>
+        `;
 
 
         messages.appendChild(
@@ -738,6 +769,88 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* ==========================================
+       💬 ADD SAVED AI MESSAGE
+    ========================================== */
+
+    function addSavedAIMessage(chat) {
+
+        const div =
+            document.createElement(
+                "div"
+            );
+
+
+        div.className =
+            "message ai-message";
+
+
+        /* Saved IMAGE */
+
+        if (chat.type === "image" && chat.imageUrl) {
+
+            div.innerHTML = `
+
+                <p>
+                    ${escapeHTML(
+                        chat.answer
+                    )}
+                </p>
+
+                <img
+                    src="${escapeHTML(
+                        chat.imageUrl
+                    )}"
+                    class="ai-image"
+                    alt="AI Generated Image"
+                    loading="lazy"
+                >
+
+            `;
+
+        }
+
+
+        /* Saved TEXT */
+
+        else {
+
+            div.innerHTML = `
+
+                ${
+                    chat.webSearch
+                        ? `
+                            <div class="web-badge">
+                                🌐 Live Web Search
+                            </div>
+                          `
+                        : ""
+                }
+
+                <div class="ai-content">
+                    ${
+                        formatAIResponse(
+                            chat.answer
+                        )
+                    }
+                </div>
+
+            `;
+
+        }
+
+
+        messages.appendChild(
+            div
+        );
+
+
+        chatArea.scrollTop =
+            chatArea.scrollHeight;
+
+    }
+
+
+    /* ==========================================
        🔗 FORMAT AI RESPONSE
     ========================================== */
 
@@ -748,19 +861,34 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
+        /*
+         * First escape HTML.
+         * This prevents AI response
+         * from injecting unwanted HTML.
+         */
+
         let html =
             escapeHTML(text);
 
 
-        /* Markdown links */
+        /* ==================================
+           MARKDOWN LINKS
+           
+           [Toynix](https://www.toynix.pk/)
+        ================================== */
 
         html = html.replace(
             /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+
             '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
         );
 
 
-        /* Bold */
+        /* ==================================
+           BOLD
+           
+           **Toynix**
+        ================================== */
 
         html = html.replace(
             /\*\*(.*?)\*\*/g,
@@ -768,7 +896,11 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
 
-        /* Italic */
+        /* ==================================
+           ITALIC
+           
+           *text*
+        ================================== */
 
         html = html.replace(
             /(?<!\*)\*([^*]+)\*(?!\*)/g,
@@ -776,15 +908,47 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
 
-        /* URLs */
+        /* ==================================
+           NUMBERED LIST
+           
+           1. Something
+        ================================== */
+
+        html = html.replace(
+            /^(\d+)\.\s(.+)$/gm,
+
+            '<div class="ai-list-item"><strong>$1.</strong> $2</div>'
+        );
+
+
+        /* ==================================
+           BULLET LIST
+           
+           • Something
+           - Something
+        ================================== */
+
+        html = html.replace(
+            /^[•\-]\s(.+)$/gm,
+
+            '<div class="ai-list-item">• $1</div>'
+        );
+
+
+        /* ==================================
+           PLAIN URLS
+        ================================== */
 
         html = html.replace(
             /(?<!["'>])(https?:\/\/[^\s<]+)/g,
+
             '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
         );
 
 
-        /* Line breaks */
+        /* ==================================
+           LINE BREAKS
+        ================================== */
 
         html =
             html.replace(
@@ -817,19 +981,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
         return String(text)
-            .replace(/&/g, "&amp;")
+
+            .replace(
+                /&/g,
+                "&amp;"
+            )
+
             .replace(
                 /</g,
                 "&lt;"
             )
+
             .replace(
                 />/g,
                 "&gt;"
             )
+
             .replace(
                 /"/g,
                 "&quot;"
             )
+
             .replace(
                 /'/g,
                 "&#039;"
@@ -847,7 +1019,11 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
 
             await navigator.clipboard
-                .writeText(text);
+                .writeText(
+                    text
+                );
+
+            return true;
 
         }
 
@@ -857,6 +1033,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 "Copy failed:",
                 error
             );
+
+            return false;
 
         }
 
